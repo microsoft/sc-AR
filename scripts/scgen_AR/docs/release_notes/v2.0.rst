@@ -1,0 +1,3 @@
+New in 2.0.0 (2021-MM-DD)
+-------------------------
+New release of scGen using scvi-tools backend.
