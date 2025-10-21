@@ -13,7 +13,7 @@ Create a new virtual environment (python 3.10.13 was used in our experiments), a
 
 ```bash
 conda env create -f environment.yml
-source activate scAR-env
+source activate scar-env
 ```
 
 
