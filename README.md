@@ -1,4 +1,4 @@
-# Adaptive Resampling For Improved Cellular Representation Learning In Imbalanced Single-cell Datasets
+# Adaptive Resampling For Improved Machine Learning In Imbalanced Single-cell Datasets
 
 This repository contains the code that accompanies our paper, "Adaptive Resampling For Improved Cellular Representation Learning In Imbalanced Single-cell Datasets". You can find the link to the preprint here.
 
