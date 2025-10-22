@@ -117,9 +117,7 @@ class scAR:
         source: https://goodboychan.github.io/python/tensorflow/mit/2021/02/27/Debiasing.html
             
         Args:
-            z (torch.Tensor): Latent variables.
-            bins (int, optional): Number of bins to use for histogram. Defaults to 10.
-            smoothing_fac (float, optional): Smoothing factor for histogram. Defaults to 0.001."""
+            z (torch.Tensor): Latent variables."""
             
         bins = self.bins
         smoothing_fac = self.smoothing_fac
