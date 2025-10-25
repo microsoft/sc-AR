@@ -12,8 +12,8 @@ While machine learning models trained on single-cell transcriptomics data have s
 Create a new virtual environment (python 3.10.13 was used in our experiments), and install using the following commands:
 
 ```bash
-conda env create -f environment.yml
-source activate scar-env
+conda env create -f environment.yaml
+conda activate scar-env
 ```
 
 
@@ -32,22 +32,19 @@ Code used for training and validaiton presented in the manuscript are provided i
 
 ## Reproducing Results
 
-All model checkpoints and scRNA-seq datasets used in our study are publicly available with further guidance provided below. You can run the bash scripts provided in the `bash` directory with the provided settings to train from scratch (`train_scgen.sh` and `train_scvi.sh`), or use the provided checkpoints from here. For downloading data and running validation, please find instructions below. 
+All model checkpoints and scRNA-seq datasets used in our study are publicly available in the project's Zenodo dashboard: https://zenodo.org/records/15186018?preview=1&token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjZjNWZkNjE0LTkzMDUtNDU4Mi05NDljLWVhZDIzZDM4MTg2OCIsImRhdGEiOnt9LCJyYW5kb20iOiJhYmMzZmI2MTg0ZThhNjA4OTk4MzYxZGI0ZmExZWI3ZCJ9.jIEPdHVpbnO9VL9sNB1s0PPEf7ZxtIOFKtXh3_0UM91GZRqWiiIvZiQHli0qS1jO7pMHL0Ay9Ay4aIy9F8CxHw. Detailed guidance for each section is provided in the following.
 
 ## Datasets
 
-You can find the datasets used for modelling and evaluation as well as model checkpoints in the project's Zenodo dashboard: https://zenodo.org/records/15186018?preview=1&token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjZjNWZkNjE0LTkzMDUtNDU4Mi05NDljLWVhZDIzZDM4MTg2OCIsImRhdGEiOnt9LCJyYW5kb20iOiJhYmMzZmI2MTg0ZThhNjA4OTk4MzYxZGI0ZmExZWI3ZCJ9.jIEPdHVpbnO9VL9sNB1s0PPEf7ZxtIOFKtXh3_0UM91GZRqWiiIvZiQHli0qS1jO7pMHL0Ay9Ay4aIy9F8CxHw
+You can download the datasets used for modelling from the Zenodo link provided above. More details about datasets used for each of the tools/analysis are provided below:
 
-
-Please find more details about data for each of the tools/analysis used below:
-
-Run the following command to download the Species, PBMC, and H.poly datasets used for training and evaluation of scRNA-seq perturbation response prediction models. This script is a modified version of the https://github.com/theislab/scgen-reproducibility/blob/master/code/DataDownloader.py, and each h5ad file will be located in `./data/` directory for the training and validation scripts to load them. The link to the public google Drive of the h5ad files provided by the original study is https://drive.google.com/drive/folders/1v3qySFECxtqWLRhRTSbfQDFqdUCAXql3.
+For scGen models, you can run the following command to download the Species, PBMC, and H.poly datasets used for training and evaluation of scRNA-seq perturbation response prediction models. This script is a modified version of the https://github.com/theislab/scgen-reproducibility/blob/master/code/DataDownloader.py, and each h5ad file will be saved in `./data/` directory for the training and validation scripts to load them. The link to the public google Drive of the h5ad files provided by the original study is https://drive.google.com/drive/folders/1v3qySFECxtqWLRhRTSbfQDFqdUCAXql3.
 
 ```bash
 python scripts/DownloadData.py
 ```
 
-For training and OOD evaluation of the scVI models, we used the following files that all should be located in `./data/sctab/`:
+For training and evaluation of the scVI models, we used the following files that are available in the Zenodo and should be located in `./data/sctab/`:
 
 - BaseModel_scTabAll_seed0_allbase_TrainingData.h5ad: generated using [https://github.com/microsoft/scFM-datamix/blob/main/Preprocess/preprocess_data_allbase.py]
 
@@ -63,15 +60,15 @@ For training and OOD evaluation of the scVI models, we used the following files 
 
 ## Training
 
-The bash scripts used for training models are provided in the bash/ directory. The parameters of the training scripts for each model can be adjusted, which train for both AR and Naive setting as indicated in `AR_list=(True False)`. The provided train bash scripts loop over different settings for each model with details provided in the comments, and trains separate model for each combination.
+The bash scripts used for training models are provided in the `bash/` directory. The parameters of the training scripts for each model can be adjusted, which train for both AR and Naive setting as indicated in `AR_list=(True False)`. The provided train bash scripts loop over different settings for each model with details provided in the comments, and trains separate model for each combination.
 
-For scGen, the `bash/train_scgen.sh` loops over different cell groups to be excluded during training as the test set, seed lists, and AR/Naive settings. You need to adjust required paramters as indicated in the bash scirpt if plan to run training/validation on other datasets.
+For scGen, the `bash/train_scgen.sh` loops over different cell groups to be excluded during training as the test set, seed lists, and AR/Naive settings. You need to adjust required paramters as indicated in the bash scirpt if intend to run training/validation on other datasets.
 
 ```bash
 bash scripts/train_scgen.sh
 ```
 
-For training scVI models, look at the input arguments of the `bash/train_scvi.sh` script and their description. The following command is an exmaple to train scvi model on the scTab data files located in `/data/sctab/` directory, which trains model for different combination of blood base and atlas cells as training samples, different seed values, and AR vs Naive settings. 
+For scVI models, read the input arguments of the `bash/train_scvi.sh` script and their descriptions. The following command is used to train scvi model on the scTab data files located in `/data/sctab/` directory, which trains model for different combination of blood base and atlas cells as training samples. The input arguments should can be adjusted. 
 
 ```bash
 ./train_scvi.sh \
@@ -102,13 +99,13 @@ bash scripts/predict_scgen.sh
 
 ## Evaluation
 
-For reproducing evaluation results of the scGen models, run the following script, where you can adjust the dataset parameters, seeds, and AR vs. Naive settings based on model variables. The output includes all different evaluation metrics, which will be saved in `result/test/${dataset}` folder.
+For reproducing evaluation results of the scGen models, run the following script, where you can adjust the dataset parameters, seeds, and AR vs. Naive settings based on model variables. The output includes all different evaluation metrics, which will be saved in `result/test/${dataset}` folder. The `eval_scripts/generate_plot.py` script is used for generating the plots for scGen evaluation.
 
 ```bash
 bash scripts/eval_scgen.sh
 ```
 
-For evalaution of scVI models, there are two bash scripts inside eval_scripts folder for cell type classification and gene expression reconstruction metrics, which does not require prior prediction and directly load model files. 
+For evalaution of scVI models, there are two bash scripts inside the `eval_scripts` folder for cell type classification and gene expression reconstruction metrics, which directly loads model files, makes prediction, and generate results. 
 
 For cell type classification, run the following command:
 
