@@ -68,16 +68,16 @@ For scGen, the `bash/train_scgen.sh` loops over different cell groups to be excl
 bash ./train_scgen.sh
 ```
 
-For scVI models, read the input arguments of the `bash/train_scvi.sh` script and their descriptions. The following command is used to train scvi model on the scTab data files located in `/data/sctab/` directory, which trains model for different combination of blood base and atlas cells as training samples. The input arguments should can be adjusted. 
+For scVI models, read the input arguments of the `bash/train_scvi.sh` script and their descriptions. The following command is used to train scvi model on the scTab data files located in `/data/sctab/` directory, which trains model for different combination of blood base and atlas cells as training samples. The input arguments should be adjusted. 
 
 ```bash
 ./train_scvi.sh \
     data="sctab" \
-    data_path="/data/sctab/" \
-    out_path="/saved_models/" \
+    data_path="../data/sctab/" \
+    out_path="../saved_models/" \
     seed=42 \
     log_path="/bash/log" \
-    root="./" \
+    root="../" \
     model_name="scvi" \
     latent_dim=64 \
     num_epoch=300 \
@@ -125,7 +125,7 @@ For gene expression reconstruction evaluation, run the following command:
 ./eval-scripts/eval-reconstruction.sh \
 ```
 
-where the script loops over the same parameters as in classification script, and can be adjusted. The eval outputs will be saved in `../result/test/scVI-reconstruction-evals/` and `../result/test/scVI-classification-evals/` by default, where you can modify the path in the bash scripts.
+where the script loops over the same parameters as in classification script, and can be adjusted. The eval outputs will be saved in `./result/test/scVI-reconstruction-evals/` and `./result/test/scVI-classification-evals/` by default, where you can modify the path in the bash scripts.
 
 
 ## Adaptive Resampling Module
