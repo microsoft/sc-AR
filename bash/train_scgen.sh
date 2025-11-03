@@ -11,21 +11,21 @@ fi
 
 # activate environment
 eval "$(conda shell.bash hook)"
-source activate scar-env
+conda activate scar-env
 export WANDB_KEY=''
 
 ## Datasets ##
 ## Species
-data='species'
-list=('mouse' 'pig' 'rabbit' 'rat')
+# data='species'
+# list=('mouse' 'pig' 'rabbit' 'rat')
 
 ## PBMC
 # list=('CD4T' 'B' 'NK' 'CD14+Mono' 'Dendritic' 'CD8T' 'FCGR3A+Mono')
 # data='pbmc'
 
 ## LPS-Hpoly
-# data='lps-hpoly'
-# list=('Endocrine' 'Enterocyte' 'Enterocyte.Progenitor' 'Goblet' 'Stem' 'TA' 'TA.Early' 'Tuft')
+data='lps-hpoly'
+list=('Endocrine' 'Enterocyte' 'Enterocyte.Progenitor' 'Goblet' 'Stem' 'TA' 'TA.Early' 'Tuft')
 
 
 
@@ -39,7 +39,7 @@ num_gpus=1 # 4
 
 
 ## Common Parameters ##
-seed_list=(100 101 102 103 104)
+seed_list=(100) # 101 102 103 104)
 AR_list=(True False)
 
 if [ $data == 'pbmc' ]; then
@@ -49,6 +49,7 @@ elif [ $data == 'lps-hpoly' ]; then
 elif [ $data == 'species' ]; then
     num_epoch=1000
 fi
+num_epoch=5
 
 variable_con=False
 con_percent=1.0

@@ -80,6 +80,8 @@ def predict_and_save_anndata_scgen(args, adata, model_name='Naive'):
         train_adata.copy(),
         use_gpu = args.gpu)
     model.is_trained = True
+    print('Loaded model from:',
+            args.root+"saved_models/"+args.data+"/seed"+str(args.seed)+'/'+args.id+"-best.pt")
 
     if args.variable_con and args.con_percent == 0.0:
         unper_test_adata.obs[args.adata_label_cell] = \
@@ -105,9 +107,12 @@ def predict_and_save_anndata_scgen(args, adata, model_name='Naive'):
     if args.in_dist_group == '':
         pred_adata.write(
             args.root+"prediction/"+args.data+"/seed"+str(args.seed)+'/'+args.id+"-pred-adata.h5ad")
+        print("Saved prediction to:",
+            args.root+"prediction/"+args.data+"/seed"+str(args.seed)+'/'+args.id+"-pred-adata.h5ad")
     elif args.in_dist_group != '':
         pred_adata.write(
             args.root+"prediction/"+args.data+"/seed"+str(args.seed)+'/'+args.id+"-pred-adata-"+args.in_dist_group+".h5ad")
+
 
     return
 
@@ -180,6 +185,7 @@ def predict(args, adata=None):
 
     models = args.model.split(',')
     for model_name in models:
+        print("Predicting with model:", model_name)
         args.AR = False if model_name == 'Naive' else True
         create_id(args)
         

@@ -14,16 +14,16 @@ source activate scar-env
 
 ## Datasets ##
 ## Species
-data='species'
-list=('mouse' 'pig' 'rabbit' 'rat')
+# data='species'
+# list=('mouse' 'pig' 'rabbit' 'rat')
 
 ## PBMC
 # data='pbmc'
 # list=('CD4T' 'B' 'NK' 'CD14+Mono' 'Dendritic' 'CD8T' 'FCGR3A+Mono')
 
 ## LPS-Hpoly
-# data='lps-hpoly'
-# list=('Endocrine' 'Enterocyte' 'Enterocyte.Progenitor' 'Goblet' 'Stem' 'TA' 'TA.Early' 'Tuft')
+data='lps-hpoly'
+list=('Endocrine' 'Enterocyte' 'Enterocyte.Progenitor' 'Goblet' 'Stem' 'TA' 'TA.Early' 'Tuft')
 
 
 
@@ -35,7 +35,7 @@ out_path='../saved_models/'
 ## Common Parameters ##
 seed=(100 101 102 103 104) # Standard setting
 
-num_epoch=0=500
+num_epoch=500
 if [ $data == 'pbmc' ]; then
     num_epoch=1800
 elif [ $data == 'lps-hpoly' ]; then
