@@ -148,9 +148,13 @@ If our work assists your research, pls use the following to cite our work:
 
 ```
 
-## Licence
+## License
 
 This project is available under the MIT License.
+
+## Transparency Documentation
+
+Microsoft's Responsible AI Transparency Documentation for Research is provided on this repository, please see [scAR_Transparency](https://github.com/microsoft/sc-AR/scAR_Transparency.pdf).
 
 ## Contributing
 
