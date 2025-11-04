@@ -1,6 +1,6 @@
 # Adaptive Resampling For Improved Machine Learning In Imbalanced Single-cell Datasets
 
-This repository contains the code that accompanies our paper, "Adaptive Resampling For Improved Machine Learning In Imbalanced Single-cell Datasets".
+This repository contains the code that accompanies our paper, "Adaptive Resampling For Improved Machine Learning In Imbalanced Single-Cell Datasets". You can find the link to the preprint here.
 
 ## Abstract
 While machine learning models trained on single-cell transcriptomics data have shown great promise in providing biological insights, existing tools struggle to effectively model underrepresented and out-of-distribution cellular features or states. We present a generalizable Adaptive Resampling (AR) approach that addresses these limitations and enhances single-cell representation learning by resampling data based on its learned latent structure in an online, adaptive manner concurrent with model training. Experiments on gene expression reconstruction, cell type classification, and perturbation response prediction tasks demonstrate that the proposed AR training approach leads to significantly improved downstream performance across datasets and metrics. Additionally, it enhances the quality of learned cellular embeddings compared to standard training methods. Our results suggest that AR may serve as a valuable technique for improving representation learning and predictive performance in single-cell transcriptomic models. 
@@ -140,15 +140,19 @@ These weights can be used to modify the training data distribution at the start 
 
 ## Citation
 
-If our work assists your research, pls use the following to cite our work:
+If our work assists your research, please use the following to cite our work:
 
 ```bash
 
 ```
 
-## Licence
+## License
 
 This project is available under the MIT License.
+
+## Transparency Documentation
+
+Microsoft's Responsible AI Transparency Documentation for Research is provided on this repository, please see [scAR_Transparency](https://github.com/microsoft/sc-AR/blob/main/scAR_Transparency.pdf).
 
 ## Contributing
 
