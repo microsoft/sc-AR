@@ -1,9 +1,9 @@
 # Adaptive Resampling For Improved Machine Learning In Imbalanced Single-cell Datasets
 
-This repository contains the code that accompanies our paper, "Adaptive Resampling For Improved Cellular Representation Learning In Imbalanced Single-cell Datasets". You can find the link to the preprint here.
+This repository contains the code that accompanies our paper, "Adaptive Resampling For Improved Machine Learning In Imbalanced Single-cell Datasets".
 
 ## Abstract
-While machine learning models trained on single-cell transcriptomics data have shown great promise in providing biological insights, existing tools struggle to effectively model underrepresented and out-of-distribution cellular features or states, which are often the most biologically relevant. We present an Adaptive Resampling (AR) approach that addresses these limitations and enhances single-cell representation learning by resampling data based on its learned latent structure in an online, adaptive manner concurrent with model training. Experiments on gene expression reconstruction, cell type classification, and perturbation response prediction tasks demonstrate that the proposed AR training approach leads to significantly improved downstream performance across datasets and metrics. Additionally, it enhances the quality of learned cellular embeddings compared to standard training methods. Our results suggest that AR may serve as a valuable technique for improving representation learning and predictive performance in single-cell transcriptomic models. 
+While machine learning models trained on single-cell transcriptomics data have shown great promise in providing biological insights, existing tools struggle to effectively model underrepresented and out-of-distribution cellular features or states. We present a generalizable Adaptive Resampling (AR) approach that addresses these limitations and enhances single-cell representation learning by resampling data based on its learned latent structure in an online, adaptive manner concurrent with model training. Experiments on gene expression reconstruction, cell type classification, and perturbation response prediction tasks demonstrate that the proposed AR training approach leads to significantly improved downstream performance across datasets and metrics. Additionally, it enhances the quality of learned cellular embeddings compared to standard training methods. Our results suggest that AR may serve as a valuable technique for improving representation learning and predictive performance in single-cell transcriptomic models. 
 
 ---
 
@@ -25,18 +25,18 @@ Code used for training and validaiton presented in the manuscript are provided i
 
 ├── bash # Containing bash scripts for model training/evaluation
 ├── eval_scripts # Containing scripts for evaluation
-├── scripts # Containing main Python scripts for training model
+├── scripts # Containing main Python scripts for training models
 ├── data # Create a data folder where h5ad data files should be located in this path
 ├── saved_models # Model checkpoints will be saved in this directory
 ```
 
 ## Reproducing Results
 
-All model checkpoints and scRNA-seq datasets used in our study are publicly available in the project's Zenodo dashboard: https://zenodo.org/records/15186018?preview=1&token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjZjNWZkNjE0LTkzMDUtNDU4Mi05NDljLWVhZDIzZDM4MTg2OCIsImRhdGEiOnt9LCJyYW5kb20iOiJhYmMzZmI2MTg0ZThhNjA4OTk4MzYxZGI0ZmExZWI3ZCJ9.jIEPdHVpbnO9VL9sNB1s0PPEf7ZxtIOFKtXh3_0UM91GZRqWiiIvZiQHli0qS1jO7pMHL0Ay9Ay4aIy9F8CxHw. Detailed guidance for each section is provided in the following.
+All model checkpoints and scRNA-seq datasets used in our study are publicly available in the project's Zenodo dashboard: https://zenodo.org/records/15186018. Detailed guidance for each section is provided in the following.
 
 ## Datasets
 
-You can download the datasets used for modelling from the Zenodo link provided above. More details about datasets used for each of the tools/analysis are provided below:
+You can download the datasets used for modelling from the Zenodo link provided above. More details about datasets used for each of the analysis are provided below:
 
 For scGen models, you can run the following command to download the Species, PBMC, and H.poly datasets used for training and evaluation of scRNA-seq perturbation response prediction models. This script is a modified version of the https://github.com/theislab/scgen-reproducibility/blob/master/code/DataDownloader.py, and each h5ad file will be saved in `./data/` directory for the training and validation scripts to load them. The link to the public google Drive of the h5ad files provided by the original study is https://drive.google.com/drive/folders/1v3qySFECxtqWLRhRTSbfQDFqdUCAXql3.
 
@@ -62,13 +62,13 @@ For training and evaluation of the scVI models, we used the following files that
 
 The bash scripts used for training models are provided in the `bash/` directory. The parameters of the training scripts for each model can be adjusted, which train for both AR and Naive setting as indicated in `AR_list=(True False)`. The provided train bash scripts loop over different settings for each model with details provided in the comments, and trains separate model for each combination.
 
-For scGen, the `bash/train_scgen.sh` loops over different cell groups to be excluded during training as the test set, seed lists, and AR/Naive settings. You need to adjust required paramters as indicated in the bash scirpt if intend to run training/validation on other datasets.
+For scGen, the `bash/train_scgen.sh` loops over different cell groups to be excluded during training as the test set, seed values, and AR/Standard settings. Paramters can be adjusted as described in the bash scirpt if intend to run training on other datasets.
 
 ```bash
 ./train_scgen.sh
 ```
 
-For scVI models, read the input arguments of the `bash/train_scvi.sh` script and their descriptions. The following command is used to train scvi model on the scTab data files located in `/data/sctab/` directory, which trains model for different combination of blood base and atlas cells as training samples. The input arguments should be adjusted. 
+For scVI models, read the input arguments of the `bash/train_scvi.sh` script and their descriptions. The following command is used to train scvi model on the scTab data files located in `/data/sctab/` directory, which trains models for different combination of blood base and atlas cells as training samples. The input arguments should be adjusted. 
 
 ```bash
 ./train_scvi.sh \
@@ -85,12 +85,10 @@ For scVI models, read the input arguments of the `bash/train_scvi.sh` script and
     atlas_count=0
 ```
 
-If any dataset other than the scTab data desribed above is used, the path to the train adata (train_adata_path), validation adata (valid_adata_path), and test adata (test_adata_path) should be provided. More details are provided in the bash files. 
-
 
 ## Prediction
 
-For perturbation response prediction (before running evaluation), run the following script, where you can adjust the dataset parameters, seeds, and AR vs. Naive settings based on model variables. The output would be a .h5ad file including model prediction, which will be usef for evaluation and is saved in `./prediction/${dataset}` folder.
+For perturbation response prediction (before running evaluation), run the following script, where you can adjust the dataset parameters, seeds, and AR vs. Standard settings based on model variables. The output would be a .h5ad file including model prediction, which will be usef for evaluation and is saved in `./prediction/${dataset}` folder.
 
 ```bash
 ./predict_scgen.sh
@@ -99,7 +97,7 @@ For perturbation response prediction (before running evaluation), run the follow
 
 ## Evaluation
 
-For reproducing evaluation results of the scGen models, run the following script, where you can adjust the dataset parameters, seeds, and AR vs. Naive settings based on model variables. The output includes all different evaluation metrics, which will be saved in `result/test/${dataset}` folder. The `eval_scripts/generate_plot.py` script is used for generating the plots for scGen evaluation.
+For reproducing evaluation results of the scGen models, run the following script, where you can adjust the dataset parameters, seeds, and AR vs. Standard settings based on model variables. The output includes all different evaluation metrics, which will be saved in `result/test/${dataset}` folder. The `eval_scripts/generate_plot.py` script is used for generating the plots for scGen evaluation.
 
 ```bash
 ./eval_scgen.sh
@@ -113,7 +111,7 @@ For cell type classification, run the following command:
 ./eval-scripts/eval-classification.sh \
 
 # where the script loops over the following parameters for the scVI models, that can be adjusted.
-seed_values=(42 43 44 45 46)
+seed_values=(42)
 ARtype_values=("T" "F")
 latent_dim_values=(64)
 Atlas_cell_count=(0 1 10 100 1000 10000 50000)
@@ -135,8 +133,8 @@ You can use the implemented function `calculate_resampling_weights()` located in
 Simply pass the training sample projections in latent space (generated by your own pipeline) as input to the function.
 It will return a list of resampling weights corresponding to all training samples, which can then be used to perform resampling in the next training iteration.
 
-The AR module can also be applied once prior to training by computing the resampling weights from embeddings generated by a large-scale foundational model.
-These precomputed weights can be used to modify the training data distribution at the start of model training for any desired downstream task.
+The AR module can also be applied once prior to training by computing the resampling weights from embeddings generated by large-scale foundational models.
+These weights can be used to modify the training data distribution at the start of model training for any desired downstream task.
 
 
 

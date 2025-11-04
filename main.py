@@ -287,7 +287,7 @@ if __name__ == '__main__':
         
     args.gpu = torch.cuda.is_available()
     
-    if not args.test:
+    if (not args.test) & (not args.predict):
         if args.AR:
             args.model = 'AR'
         else:
