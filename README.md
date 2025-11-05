@@ -150,6 +150,17 @@ These weights can be used to modify the training data distribution at the start 
 If our work assists your research, please use the following to cite our work:
 
 ```bash
+@article {Navidi2025.11.04.686583,
+	author = {Navidi, Zeinab and Thoutam, Akshaya and Hughes, Madeline and Raghavan, Srivatsan and Winter, Peter S. and Crawford, Lorin and Amini, Ava P.},
+	title = {Adaptive resampling for improved machine learning in imbalanced single-cell datasets},
+	elocation-id = {2025.11.04.686583},
+	year = {2025},
+	doi = {10.1101/2025.11.04.686583},
+	publisher = {Cold Spring Harbor Laboratory},
+	URL = {https://www.biorxiv.org/content/early/2025/11/05/2025.11.04.686583},
+	eprint = {https://www.biorxiv.org/content/early/2025/11/05/2025.11.04.686583.full.pdf},
+	journal = {bioRxiv}
+    }
 
 ```
 
