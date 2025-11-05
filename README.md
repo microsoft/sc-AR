@@ -19,7 +19,7 @@ conda activate scar-env
 
 ## Codebase overview
 
-Code used for training and validaiton presented in the manuscript are provided in this repository.
+Code used for training and validaiton presented in the manuscript are provided in this repository. 
 
 ```bash
 
@@ -32,7 +32,7 @@ Code used for training and validaiton presented in the manuscript are provided i
 
 ## Reproducing Results
 
-All model checkpoints and scRNA-seq datasets used in our study are publicly available in the project's [Zenodo dashboard](https://zenodo.org/records/15186018). Detailed guidance for each section is provided in the following.
+All model checkpoints and scRNA-seq datasets used in our study are publicly available in the project's [Zenodo dashboard](https://zenodo.org/records/15186018), with model configurations provided in `configs/` folder. Detailed guidance for each section is provided in the following.
 
 ## Datasets
 

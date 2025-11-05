@@ -1,0 +1,34 @@
+train: True
+predict: False
+test: False
+qq: False
+update_old_model_name: False
+id: species-testmouse-ARTrue-oodTrue-varconTrue-per0.2-lr5e-05-wd5e-05-bs2048-ldim64-epoch1000-seed300
+test_id: 
+model: AR,Naive
+AR: True
+latent_dim: 64
+num_epoch: 1000
+optimizer: adam
+batch_size: 2048
+lr: 5e-05
+weight_decay: 5e-05
+w_update: max_w
+bins: 100
+alpha: 0.0001
+data: species
+train_data: ['pig', 'rabbit', 'rat']
+test_data: ['mouse']
+ood: True
+variable_con: True
+con_percent: 0.2
+in_dist_group: 
+seed: 300
+ckpt: /home/v-akthoutam/sc-uncertainty/saved_models/species/seed300/
+adata_label_cell: species
+adata_label_per: LPS6
+adata_label_unper: unst
+checkpoint: 500
+gpu: True
+_wandb: {}
+best_epoch: 620

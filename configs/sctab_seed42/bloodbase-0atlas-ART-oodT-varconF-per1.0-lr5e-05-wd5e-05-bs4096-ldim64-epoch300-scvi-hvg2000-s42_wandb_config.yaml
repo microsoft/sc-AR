@@ -1,0 +1,44 @@
+root: ..
+train: True
+predict: False
+test: False
+qq: False
+debug: False
+id: bloodbase-0atlas-ART-oodT-varconF-per1.0-lr5e-05-wd5e-05-bs4096-ldim64-epoch300-scvi-hvg2000-s42
+test_id: 
+model: AR
+model_name: scvi
+AR: True
+latent_dim: 64
+num_epoch: 300
+optimizer: adam
+batch_size: 4096
+lr: 5e-05
+weight_decay: 5e-05
+cell_count: None
+hvg_count: 2000
+bins: 100
+alpha: 0.0001
+data: ajay
+data_path: ../data/ajay/
+test_adata_path: /Users/zeinab/Documents/MSR_internship/project/MSR_internship_new_git/sc-uncertainty/data/ajay/sctab_train_10pct_heart_nohematopoietic.h5ad
+train_data: ['']
+test_data: ['']
+ood: True
+variable_con: False
+con_percent: 1.0
+in_dist_group: 
+out_path: ../saved_models/
+sctab_subset: None
+atlas_count: 0
+seed: 42
+adata_label_cell: 
+adata_label_per: 
+adata_label_unper: 
+checkpoint: 20
+gpu: True
+plot_umap_annotated_with_w: False
+tracked_epoch: best
+degs_extraction_based_on_resampling_w: False
+_wandb: {}
+best_epoch: 298

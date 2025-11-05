@@ -1,0 +1,33 @@
+train: True
+predict: False
+test: False
+qq: False
+update_old_model_name: False
+id: lps-hpoly-testEnterocyte-ARFalse-oodTrue-varconTrue-per0.4-lr5e-05-wd5e-05-bs2048-ldim64-epoch2000-seed300
+test_id: 
+model: AR,Naive
+AR: False
+latent_dim: 64
+num_epoch: 2000
+optimizer: adam
+batch_size: 2048
+lr: 5e-05
+weight_decay: 5e-05
+w_update: max_w
+bins: 100
+alpha: 0.0001
+data: lps-hpoly
+train_data: ['Endocrine', 'Enterocyte.Progenitor', 'Goblet', 'Stem', 'TA', 'TA.Early', 'Tuft']
+test_data: ['Enterocyte']
+ood: True
+variable_con: True
+con_percent: 0.4
+in_dist_group: 
+seed: 300
+ckpt: /home/v-akthoutam/sc-uncertainty/saved_models/lps-hpoly/seed300/
+adata_label_cell: cell_label
+adata_label_per: Hpoly.Day10
+adata_label_unper: Control
+checkpoint: 500
+gpu: True
+_wandb: {}

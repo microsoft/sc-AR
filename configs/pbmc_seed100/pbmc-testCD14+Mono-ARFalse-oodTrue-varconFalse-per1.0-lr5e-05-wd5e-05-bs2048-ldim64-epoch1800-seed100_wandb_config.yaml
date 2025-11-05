@@ -1,0 +1,31 @@
+train: True
+test: False
+qq: False
+id: pbmc-testCD14+Mono-ARFalse-oodTrue-varconFalse-per1.0-lr5e-05-wd5e-05-bs2048-ldim64-epoch1800-seed100
+model: Naive
+AR: False
+latent_dim: 64
+num_epoch: 1800
+optimizer: adam
+batch_size: 2048
+lr: 5e-05
+weight_decay: 5e-05
+w_update: max_w
+bins: 100
+alpha: 0.0001
+data: pbmc
+train_data: ['CD4T', 'B', 'NK', 'Dendritic', 'CD8T', 'FCGR3A+Mono']
+test_data: ['CD14+Mono']
+ood: True
+variable_con: False
+con_percent: 1.0
+in_dist_group: 
+seed: 100
+ckpt: /home/v-mahughes/sc-uncertainty/saved_models/pbmc/seed100/
+adata_label_cell: cell_type
+adata_label_per: stimulated
+adata_label_unper: control
+checkpoint: 500
+gpu: True
+_wandb: {}
+best_epoch: 1773
