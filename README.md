@@ -1,6 +1,6 @@
-# Adaptive Resampling For Improved Machine Learning In Imbalanced Single-cell Datasets
+# Adaptive Resampling for Improved Machine Learning in Imbalanced Single-cell Datasets
 
-This repository contains the code that accompanies our paper, "Adaptive Resampling For Improved Machine Learning In Imbalanced Single-Cell Datasets". You can find the link to the preprint here.
+This repository contains the code that accompanies our paper, "Adaptive resampling for improved machine learning in imbalanced single-cell datasets". You can find the link to the preprint here.
 
 ## Abstract
 While machine learning models trained on single-cell transcriptomics data have shown great promise in providing biological insights, existing tools struggle to effectively model underrepresented and out-of-distribution cellular features or states. We present a generalizable Adaptive Resampling (AR) approach that addresses these limitations and enhances single-cell representation learning by resampling data based on its learned latent structure in an online, adaptive manner concurrent with model training. Experiments on gene expression reconstruction, cell type classification, and perturbation response prediction tasks demonstrate that the proposed AR training approach leads to significantly improved downstream performance across datasets and metrics. Additionally, it enhances the quality of learned cellular embeddings compared to standard training methods. Our results suggest that AR may serve as a valuable technique for improving representation learning and predictive performance in single-cell transcriptomic models. 
@@ -32,13 +32,13 @@ Code used for training and validaiton presented in the manuscript are provided i
 
 ## Reproducing Results
 
-All model checkpoints and scRNA-seq datasets used in our study are publicly available in the project's Zenodo dashboard: https://zenodo.org/records/15186018. Detailed guidance for each section is provided in the following.
+All model checkpoints and scRNA-seq datasets used in our study are publicly available in the project's [Zenodo dashboard](https://zenodo.org/records/15186018). Detailed guidance for each section is provided in the following.
 
 ## Datasets
 
 You can download the datasets used for modelling from the Zenodo link provided above. More details about datasets used for each of the analysis are provided below:
 
-For scGen models, you can run the following command to download the Species, PBMC, and H.poly datasets used for training and evaluation of scRNA-seq perturbation response prediction models. This script is a modified version of the https://github.com/theislab/scgen-reproducibility/blob/master/code/DataDownloader.py, and each h5ad file will be saved in `./data/` directory for the training and validation scripts to load them. The link to the public google Drive of the h5ad files provided by the original study is https://drive.google.com/drive/folders/1v3qySFECxtqWLRhRTSbfQDFqdUCAXql3.
+For scGen models, you can run the following command to download the Species, PBMC, and H.poly datasets used for training and evaluation of scRNA-seq perturbation response prediction models. This script is a modified version of a data downloader [here](https://github.com/theislab/scgen-reproducibility/blob/master/code/DataDownloader.py), and each h5ad file will be saved in `./data/` directory for the training and validation scripts to load them. The link to the public google Drive of the h5ad files provided by the original study is found [here](https://drive.google.com/drive/folders/1v3qySFECxtqWLRhRTSbfQDFqdUCAXql3).
 
 ```bash
 python scripts/DownloadData.py
