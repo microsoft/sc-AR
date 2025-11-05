@@ -19,11 +19,11 @@ conda activate scar-env
 
 ## Codebase overview
 
-Code used for training and validaiton presented in the manuscript are provided in this repository. Model weights as well as the hyperparameter configuration are available here.
+Code used for training and validaiton presented in the manuscript are provided in this repository.
 
 ```bash
 
-├── bash # Containing bash scripts for model training/evaluation
+├── bash # Containing bash scripts for model training/evaluation with the hyper-parameters used for each experiment
 ├── eval_scripts # Containing scripts for evaluation
 ├── scripts # Containing main Python scripts for training models
 ├── data # Create a data folder where h5ad data files should be located in this path
@@ -60,6 +60,7 @@ For training and evaluation of the scVI models, we used the following files that
 
 ## Training
 
+### scGen
 The bash scripts used for training models are provided in the `bash/` directory. The parameters of the training scripts for each model can be adjusted, which train for both AR and Naive setting as indicated in `AR_list=(True False)`. The provided train bash scripts loop over different settings for each model with details provided in the comments, and trains separate model for each combination.
 
 For scGen, the `bash/train_scgen.sh` loops over different cell groups to be excluded during training as the test set, seed values, and AR/Standard settings. Paramters can be adjusted as described in the bash scirpt if intend to run training on other datasets.
@@ -68,6 +69,7 @@ For scGen, the `bash/train_scgen.sh` loops over different cell groups to be excl
 ./train_scgen.sh
 ```
 
+### scVI
 For scVI models, read the input arguments of the `bash/train_scvi.sh` script and their descriptions. The following command is used to train scvi model on the scTab data files located in `/data/sctab/` directory, which trains models for different combination of blood base and atlas cells as training samples. The input arguments should be adjusted. 
 
 ```bash
@@ -88,21 +90,26 @@ For scVI models, read the input arguments of the `bash/train_scvi.sh` script and
 
 ## Prediction
 
+### scGen
 For perturbation response prediction (before running evaluation), run the following script, where you can adjust the dataset parameters, seeds, and AR vs. Standard settings based on model variables. The output would be a .h5ad file including model prediction, which will be usef for evaluation and is saved in `./prediction/${dataset}` folder.
 
 ```bash
 ./predict_scgen.sh
 ```
 
+### scVI
+Model prediction for the scVI models are done in the same script used for running evaluations, as described below. 
 
 ## Evaluation
 
+### scGen
 For reproducing evaluation results of the scGen models, run the following script, where you can adjust the dataset parameters, seeds, and AR vs. Standard settings based on model variables. The output includes all different evaluation metrics, which will be saved in `result/test/${dataset}` folder. The `eval_scripts/generate_plot.py` script is used for generating the plots for scGen evaluation.
 
 ```bash
 ./eval_scgen.sh
 ```
 
+### scVI
 For evalaution of scVI models, there are two bash scripts inside the `eval_scripts` folder for cell type classification and gene expression reconstruction metrics, which directly loads model files, makes prediction, and generate results. 
 
 For cell type classification, run the following command:
