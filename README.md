@@ -28,6 +28,7 @@ Code used for training and validaiton presented in the manuscript are provided i
 ├── scripts # Containing main Python scripts for training models
 ├── data # Create a data folder where h5ad data files should be located in this path
 ├── saved_models # Model checkpoints will be saved in this directory
+├── configs # Containing model configurations
 ```
 
 ## Reproducing Results
