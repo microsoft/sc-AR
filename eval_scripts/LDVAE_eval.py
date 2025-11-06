@@ -22,6 +22,10 @@ ARtype = sys.argv[6]
 latent_dim = sys.argv[7]
 Atlas_cell_count = sys.argv[8]
 
+# check if eval_output_dir exists, if not create it
+if not os.path.exists(eval_output_dir):
+    os.makedirs(eval_output_dir)
+
 model_adata = sc.read_h5ad(model_adata)
 # Load datasets
 sctab_train_10pct_heart_nohematopoietic = sc.read(os.path.join(final_eval_path, "sctab_train_10pct_heart_nohematopoietic.h5ad"))
