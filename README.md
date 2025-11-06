@@ -111,12 +111,12 @@ For reproducing evaluation results of the scGen models, run the following script
 ```
 
 ### scVI
-For evalaution of scVI models, there are two bash scripts inside the `eval_scripts` folder for cell type classification and gene expression reconstruction metrics, which directly loads model files, makes prediction, and generate results. 
+For evalaution of scVI models, there are two bash scripts inside the `bash` folder for cell type classification and gene expression reconstruction metrics, which directly loads model files, makes prediction, and generate results. 
 
 For cell type classification, run the following command:
 
 ```bash
-./eval-scripts/eval-classification.sh \
+./bash/eval_scvi_classification.sh \
 
 # where the script loops over the following parameters for the scVI models, that can be adjusted.
 seed_values=(42)
@@ -128,7 +128,7 @@ Atlas_cell_count=(0 1 10 100 1000 10000 50000)
 
 For gene expression reconstruction evaluation, run the following command:
 ```bash
-./eval-scripts/eval-reconstruction.sh \
+./bash/eval_scvi_reconstruction.sh \
 ```
 
 where the script loops over the same parameters as in classification script, and can be adjusted. The eval outputs will be saved in `./result/test/scVI-reconstruction-evals/` and `./result/test/scVI-classification-evals/` by default, where you can modify the path in the bash scripts.
