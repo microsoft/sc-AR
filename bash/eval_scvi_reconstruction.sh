@@ -32,7 +32,7 @@ for seed in "${seed_values[@]}"; do
 
                 python -u ../eval_scripts/LDVAE_eval.py \
                     "../data/sctab" \
-                    "../data/stab/bloodbase_${Atlas_cell_count}_atlas_seed${seed}_AR${AR}_train_adata_2000_2000HVGs.h5ad" \
+                    "../data/sctab/bloodbase_${Atlas_cell_count}_atlas_seed${seed}_AR${AR}_train_adata_2000_2000HVGs.h5ad" \
                     "../saved_models/sctab/seed${seed}/bloodbase-${Atlas_cell_count}atlas-AR${ARtype}-oodT-varconF-per1.0-lr5e-05-wd5e-05-bs4096-ldim${latent_dim}-epoch300-scvi-hvg2000-s${seed}-best" \
                     "../result/test/scVI-reconstruction-evals/" \
                     ${seed} \
