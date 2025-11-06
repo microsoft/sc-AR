@@ -85,9 +85,9 @@ def main():
     print(sys.argv)
     
     test_adata_path = {
-        'Heart': '../data/ajay/sctab_train_10pct_heart_nohematopoietic.h5ad',
-        'Kidney': '../data/ajay/sctab_train_10pct_kidney_nohematopoietic.h5ad',
-        'Neurons': '../data/ajay/Neurons_H1830002_10Ksubset.h5ad'
+        'Heart': '../data/sctab/sctab_train_10pct_heart_nohematopoietic.h5ad',
+        'Kidney': '../data/sctab/sctab_train_10pct_kidney_nohematopoietic.h5ad',
+        'Neurons': '../data/sctab/Neurons_H1830002_10Ksubset.h5ad'
     }
     
     

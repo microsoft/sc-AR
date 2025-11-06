@@ -29,7 +29,7 @@ for seed in "${seed_values[@]}"; do
                 echo "latent_dim=${latent_dim}" 
                 echo "Atlas_cell_count=${Atlas_cell_count}"
 
-                python -u ../eval-scripts/zero_shot_classification.py \
+                python -u ../eval_scripts/zero_shot_classification.py \
                     scVI \
                     "../saved_models/sctab/seed${seed}/bloodbase-${Atlas_cell_count}atlas-AR${ARtype}-oodT-varconF-per1.0-lr5e-05-wd5e-05-bs4096-ldim${latent_dim}-epoch300-scvi-hvg2000-s${seed}-best" \
                     ${seed} \
