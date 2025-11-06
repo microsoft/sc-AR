@@ -12,7 +12,7 @@ While machine learning models trained on single-cell transcriptomics data have s
 Create a new virtual environment (python 3.10.13 was used in our experiments), and install using the following commands:
 
 ```bash
-conda env create -f environment.yaml
+conda env create -f requirements.yaml
 conda activate scar-env
 ```
 
