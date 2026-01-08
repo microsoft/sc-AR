@@ -184,6 +184,10 @@ if __name__ == '__main__':
                         type=str2bool, nargs='?',
                         const=True, default=False,
                         help="True or False")
+    parser.add_argument("--rebuttal",
+                        type=str2bool, nargs='?',
+                        const=True, default=False,
+                        help="True or False")
 
     # model related arguments
     parser.add_argument('--id', default="",

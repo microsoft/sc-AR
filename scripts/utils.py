@@ -72,22 +72,31 @@ def create_id(args):
             '-seed'+str(args.seed)
             
     if args.model_name == 'scvi':
-        if args.data == 'sctab':
-            args.id = 'bloodbase-'+str(args.atlas_count)+'atlas'
-        elif 'idx_' in args.data and args.sctab_subset != 'normal':
-            args.id += args.data+'-'+str(args.sctab_subset)
+        args.id = 'bloodbase-'+str(args.atlas_count)+'atlas'
 
-
-        args.id = args.id + \
-            '-AR'+str(args.AR)[0]+ \
-            '-ood'+str(args.ood)[0]+ \
-            '-varcon'+str(args.variable_con)[0]+ \
-            '-per'+str(args.con_percent)+ \
-            '-lr'+str(args.lr)+ \
-            '-wd'+str(args.weight_decay)+ \
-            '-bs'+str(args.batch_size)+ \
-            '-ldim'+str(args.latent_dim)+ \
-            '-epoch'+str(args.num_epoch)+'-scvi'
+        if args.rebuttal:
+            args.id = args.id + \
+                '-AR'+str(args.AR)[0]+ \
+                '-ood'+str(args.ood)[0]+ \
+                '-varcon'+str(args.variable_con)[0]+ \
+                '-per'+str(args.con_percent)+ \
+                '-lr'+str(args.lr)+ \
+                '-wd'+str(args.weight_decay)+ \
+                '-bs'+str(args.batch_size)+ \
+                '-ldim'+str(args.latent_dim)+ \
+                '-alpha'+str(args.alpha)+ \
+                '-epoch'+str(args.num_epoch)+'-scvi'
+        else:
+            args.id = args.id + \
+                '-AR'+str(args.AR)[0]+ \
+                '-ood'+str(args.ood)[0]+ \
+                '-varcon'+str(args.variable_con)[0]+ \
+                '-per'+str(args.con_percent)+ \
+                '-lr'+str(args.lr)+ \
+                '-wd'+str(args.weight_decay)+ \
+                '-bs'+str(args.batch_size)+ \
+                '-ldim'+str(args.latent_dim)+ \
+                '-epoch'+str(args.num_epoch)+'-scvi'
 
         if args.check_scvi:
             args.id = args.id+'-check'
