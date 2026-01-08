@@ -12,6 +12,7 @@ latent_dim=$8      # latent dimension
 num_epoch=$9       # number of epochs
 AR=${10}           # AR flag: True or False
 atlas_count=${11}  # number of atlas cells, e.g., 0, 1, 10, 100, 1000, 10000, 50000
+alpha=${12}        # alpha value for smoothing
 
 
 # activate the conda environment
@@ -46,6 +47,7 @@ echo "num_epoch:" $num_epoch
 echo "AR:" $AR
 echo "atlas_count:" $atlas_count
 echo "ood:" $ood
+echo "alpha:" $alpha
 echo ""
 
 python -u ${root}/main.py \
@@ -62,13 +64,14 @@ python -u ${root}/main.py \
     --num_epoch ${num_epoch} \
     --seed ${seed} \
     --model_name "scvi" \
-    --atlas_count ${atlas_count} >> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-train.txt 2> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-train.err 
+    --atlas_count ${atlas_count} \
+    --alpha ${alpha} >> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-train.txt 2> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-train.err 
 
 # Error checking
-if grep -q "Traceback" ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-train.err; then
+if grep -q "Traceback" ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-train.err; then
     echo "Error"
 fi
 
-if grep -q "main.py: error:" ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-train.err; then
+if grep -q "main.py: error:" ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-train.err; then
     echo "Error"
 fi
