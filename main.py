@@ -129,6 +129,27 @@ def main(args):
         peak_mem_bytes = torch.cuda.max_memory_allocated()
         peak_mem_gb = peak_mem_bytes / (1024**3)
 
+        # add the training time and peak memory usage to the resource documentation file
+        with open(args.resource_documentation_file, 'a') as f:
+            f.write(
+                "{:%Y%m%d}".format(datetime.now())+','+
+                args.id+','+
+                args.model_name+','+
+                args.data+','+
+                args.AR+','+
+                args.ood+','+
+                args.variable_con+','+
+                args.con_percent+','+
+                args.lr+','+
+                args.weight_decay+','+
+                args.batch_size+','+
+                args.latent_dim+','+
+                args.alpha+','+
+                args.num_epoch+','+
+                args.seed+','+
+                args.atlas_count+','+
+                str(training_time)+','+
+                str(peak_mem_gb)+'\n')
 
         print(f"Total wall-clock training time: {training_time:.2f} seconds "
             f"({training_time/3600:.2f} hours)")
@@ -282,6 +303,8 @@ if __name__ == '__main__':
                         const=True, default=True,
                         help="True or False")
     parser.add_argument('--tracked_epoch', default='best')
+    parser.add_argument('--resource_documentation_file', default='',
+                        help="path to resource documentation file")
     
 
     # parse and preprocess args
@@ -290,6 +313,13 @@ if __name__ == '__main__':
     args.latent_dim = int(args.latent_dim)
     args.alpha = float(args.alpha)
     args.bins = int(args.bins)
+    if args.resource_documentation_file == '':
+        args.resource_documentation_file = args.root + '/result/train/resources.csv'
+
+    # check if the resource documentation file exists
+    if not os.path.exists(args.resource_documentation_file):
+        with open(args.resource_documentation_file, 'w') as f:
+            f.write('date,id,model_name,data,AR,ood,variable_con,con_percent,lr,weight_decay,batch_size,latent_dim,alpha,num_epoch,seed,atlas_count,training_time,peak_mem_gb\n')
     
     if args.train_data != '':
         args.train_data = args.train_data[0].split(',')
@@ -313,6 +343,8 @@ if __name__ == '__main__':
             args.model = 'AR'
         else:
             args.model = 'Naive'
+
+    
 
     main(args)
     print('Finished main.py')
