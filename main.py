@@ -288,6 +288,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.num_epoch = int(args.num_epoch)
     args.latent_dim = int(args.latent_dim)
+    args.alpha = float(args.alpha)
+    args.bins = int(args.bins)
+    
     if args.train_data != '':
         args.train_data = args.train_data[0].split(',')
     if args.test_data != '':
