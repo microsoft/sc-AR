@@ -317,6 +317,9 @@ if __name__ == '__main__':
     if args.resource_documentation_file == '':
         args.resource_documentation_file = args.root + '/result/train/resources.csv'
 
+    # check if parent directory of resource documentation file exists
+    if not os.path.exists(os.path.dirname(args.resource_documentation_file)):
+        os.makedirs(os.path.dirname(args.resource_documentation_file))
     # check if the resource documentation file exists
     if not os.path.exists(args.resource_documentation_file):
         with open(args.resource_documentation_file, 'w') as f:
