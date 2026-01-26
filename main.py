@@ -310,6 +310,7 @@ if __name__ == '__main__':
     # parse and preprocess args
     args = parser.parse_args()
     args.num_epoch = int(args.num_epoch)
+    args.batch_size = int(args.batch_size)
     args.latent_dim = int(args.latent_dim)
     args.alpha = float(args.alpha)
     args.bins = int(args.bins)

@@ -33,6 +33,7 @@ fi
 
 ## Other parameters ##
 ood=True
+batch_size=4096
 
 # print the parameters
 echo "data: $data"
@@ -47,6 +48,7 @@ echo "num_epoch:" $num_epoch
 echo "AR:" $AR
 echo "atlas_count:" $atlas_count
 echo "ood:" $ood
+echo "batch_size:" $batch_size
 echo "alpha:" $alpha
 echo ""
 
@@ -65,13 +67,14 @@ python -u ${root}/main.py \
     --seed ${seed} \
     --model_name "scvi" \
     --atlas_count ${atlas_count} \
-    --alpha ${alpha} >> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-train.txt 2> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-train.err 
+    --batch_size ${batch_size} \
+    --alpha ${alpha} >> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-bs${batch_size}-train.txt 2> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-bs${batch_size}-train.err 
 
 # Error checking
-if grep -q "Traceback" ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-train.err; then
+if grep -q "Traceback" ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-bs${batch_size}-train.err; then
     echo "Error"
 fi
 
-if grep -q "main.py: error:" ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-train.err; then
+if grep -q "main.py: error:" ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-bs${batch_size}-train.err; then
     echo "Error"
 fi
