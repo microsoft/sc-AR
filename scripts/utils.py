@@ -85,7 +85,15 @@ def create_id(args):
                 '-bs'+str(args.batch_size)+ \
                 '-ldim'+str(args.latent_dim)+ \
                 '-alpha'+str(args.alpha)+ \
-                '-epoch'+str(args.num_epoch)+'-scvi'
+                '-epoch'+str(args.num_epoch)
+
+            if args.balanced_data:
+                args.id = args.id + \
+                    '-'+str(args.balancing_method)
+            
+            args.id = args.id + '-scvi'
+                
+
         else:
             args.id = args.id + \
                 '-AR'+str(args.AR)[0]+ \
@@ -98,6 +106,7 @@ def create_id(args):
                 '-ldim'+str(args.latent_dim)+ \
                 '-epoch'+str(args.num_epoch)+'-scvi'
 
+
         if args.check_scvi:
             args.id = args.id+'-check'
         
@@ -107,6 +116,7 @@ def create_id(args):
         if args.hvg_count != None:
             args.id = args.id+'-hvg'+str(args.hvg_count)
         args.id = args.id+'-s'+str(args.seed)
+
 
     return
 

@@ -223,6 +223,12 @@ if __name__ == '__main__':
                         type=str2bool, nargs='?',
                         const=True, default=False,
                         help="True or False")
+    parser.add_argument("--balanced_data", type=str2bool, nargs='?',
+                        const=True, default=False,
+                        help="True or False")
+    parser.add_argument("--balancing_method", default=None,
+                        help="balancing method")
+
 
     # model related arguments
     parser.add_argument('--id', default="",
@@ -266,8 +272,10 @@ if __name__ == '__main__':
                         help='if not None, the path to the data folder')
     parser.add_argument('--h5ad_adata_file', type=str, default=None,
                         help='if not None, the path to input adata file')
-    # parser.add_argument('--valid_adata_path', type=str, default=None,
-    #                     help='path to valid adata')
+    parser.add_argument('--train_adata_path', type=str, default=None,
+                        help='if not None, the path to scvi train adata')
+    parser.add_argument('--valid_adata_path', type=str, default=None,
+                        help='if not None, the path to scvi valid adata')
     parser.add_argument('--test_adata_path', type=str, default=None,
                         help='if not None, the path to scvi test adata')
     parser.add_argument('--train_data', nargs="+", default='', 

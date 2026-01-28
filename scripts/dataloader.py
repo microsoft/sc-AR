@@ -420,7 +420,7 @@ def load_and_preprocess_data(args):
                     adata = adjust_training_proportions(args, adata)
             else:
                 # split the data into training and validation sets
-                
+                print("Loading custom data from: ", args.train_adata_path, args.valid_adata_path, args.test_adata_path)
                 train_adata = None
                 valid_adata = None
                 test_adata = None
