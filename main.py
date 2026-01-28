@@ -221,7 +221,7 @@ if __name__ == '__main__':
                         help="True or False")
     parser.add_argument("--rebuttal",
                         type=str2bool, nargs='?',
-                        const=True, default=False,
+                        const=True, default=True,
                         help="True or False")
     parser.add_argument("--balanced_data", type=str2bool, nargs='?',
                         const=True, default=False,

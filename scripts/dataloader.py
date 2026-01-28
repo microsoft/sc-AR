@@ -393,7 +393,7 @@ def load_and_preprocess_data(args):
     elif args.data == 'lps-hpoly':
         adata = load_hpoly(args)
         
-    elif args.data == 'sctab':
+    elif (args.data == 'sctab') and (args.train_adata_path is None) and (args.valid_adata_path is None):
         assert args.model_name == 'scvi', "Model name should be scvi for sctab data"
         train_adata, valid_adata, test_adata = read_and_preprocess_data_for_scvi_sctab(args)
 
@@ -401,9 +401,8 @@ def load_and_preprocess_data(args):
             count_evaluation_cell_counts(args, train_adata)
         return train_adata, valid_adata, test_adata
     
-    else: # new dataset
-        if args.h5ad_adata_file != None:
-            adata = sc.read_h5ad(args.h5ad_adata_file)
+    elif (args.train_adata_path != None):
+            adata = sc.read_h5ad(args.train_adata_path)
 
             if args.model_name == 'scgen':
                 assert args.adata_label_cell != None, "adata_label_cell should not be None"
@@ -411,16 +410,16 @@ def load_and_preprocess_data(args):
                 assert args.adata_label_unper != None, "adata_label_unper should not be None"
                 assert args.train_data != None, "train_data should not be None."+ \
                     "args.train_data should be a string concatenating cell groups from the " + \
-                    "args.h5ad_adata_file in the args.adata_label_cell field that are used for training, concatenated by ','"
+                    "args.train_adata_path in the args.adata_label_cell field that are used for training, concatenated by ','"
                 assert args.test_data != None, "test_data should not be None. "+ \
                     "args.test_data should be a string inclduing the cell group from the " + \
-                    "args.h5ad_adata_file in the args.adata_label_cell field that is exclueded durring training."
+                    "args.train_adata_path in the args.adata_label_cell field that is exclueded durring training."
 
                 if args.train:
                     adata = adjust_training_proportions(args, adata)
             else:
-                # split the data into training and validation sets
-                print("Loading custom data from: ", args.train_adata_path, args.valid_adata_path, args.test_adata_path)
+                assert args.model_name == 'scvi', "Model name should be either scgen or scvi for custom data"
+                print("Loading custom data")
                 train_adata = None
                 valid_adata = None
                 test_adata = None
@@ -438,7 +437,7 @@ def load_and_preprocess_data(args):
                 if args.test_adata_path is not None:
                     # read the h5ad file from test_adata_path
                     test_adata = ad.read_h5ad(args.test_adata_path)
-                    print('Loaded test_adata from:', args.test_adata_path)  
+                    print('Loaded test_adata from:', args.test_adata_path)
                 
                 return train_adata, valid_adata, test_adata
 
