@@ -1,14 +1,10 @@
-import argparse
 from utils import set_seed
+from geosketch import gs
 import scanpy as sc
 import numpy as np
-import pandas as pd
-import anndata as ad
+import argparse
 import time
 import os
-import pickle
-from random import shuffle
-from geosketch import gs
 
 
 
