@@ -77,9 +77,6 @@ def create_id(args):
         if args.rebuttal:
             args.id = args.id + \
                 '-AR'+str(args.AR)[0]+ \
-                '-ood'+str(args.ood)[0]+ \
-                '-varcon'+str(args.variable_con)[0]+ \
-                '-per'+str(args.con_percent)+ \
                 '-lr'+str(args.lr)+ \
                 '-wd'+str(args.weight_decay)+ \
                 '-bs'+str(args.batch_size)+ \

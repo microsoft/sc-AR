@@ -60,29 +60,29 @@ def balance_data_class_balancing(
     # get the unique values of the obs_class_label
     unique_values = adata.obs[obs_class_label].unique()
     sample_count_per_class = int(adata.shape[0] / len(unique_values))
-    # initialize the balanced adata as empty
-    balanced_adata = ad.AnnData(
-        X=np.zeros((0, adata.shape[1])),
-        obs=pd.DataFrame(index=[]),
-        var=adata.var,
-    )
+
     all_indices = []
     for value in unique_values:
         # get the indices of the cells with the obs_class_label equal to value
         mask = adata.obs[obs_class_label] == value
         indices = np.where(mask)[0]
         # sample from the indices with replacement
-        sampled_indices = np.random.choice(indices, size=sample_count_per_class, replace=True)  
+        # check if the number of cells in the class is greater than the sample_count_per_class, if so, sample from the class without replacement
+        if len(indices) >= sample_count_per_class:
+            sampled_indices = np.random.choice(indices, size=sample_count_per_class, replace=False)  
+        else:
+            sampled_indices = np.random.choice(indices, size=sample_count_per_class, replace=True)  
+        
         all_indices.extend(sampled_indices)
         
-    balanced_adata = adata[np.array(all_indices)].copy()
 
     # check if balanced_adata.shape[0] != adata.shape[0], count the difference and randomly sample from the difference to make the number of cells equal to the original number of cells
-    if balanced_adata.shape[0] != adata.shape[0]:
-        difference = adata.shape[0] - balanced_adata.shape[0]
+    if len(all_indices) != adata.shape[0]:
+        difference = adata.shape[0] - len(all_indices)
         sampled_indices = np.random.choice(adata.shape[0], size=difference, replace=True)
-        per_class_adata = adata[sampled_indices]
-        balanced_adata = balanced_adata.concatenate(per_class_adata)
+        all_indices.extend(sampled_indices)
+
+    balanced_adata = adata[np.array(all_indices)].copy()
     assert balanced_adata.shape[0] == adata.shape[0]
     # assert there are the same number of classes as it was in the original adata
     assert len(balanced_adata.obs[obs_class_label].unique()) == len(unique_values)
@@ -138,7 +138,7 @@ def balance_data_geometric_sketching(
     ]
     print(f"Balanced data shape: {balanced_adata.shape} (original: {adata.shape})")
     
-    return balanced_adata
+    return balanced_adata, num_covering_boxes
 
 
 def split_data(
@@ -174,8 +174,7 @@ def read_and_preprocess_data_for_scvi_sctab(
     atlas_count,
     hvg_count,
     seed,
-    root,
-    AR=False,
+    root
 ):
     """Read and preprocess data for scvi.
     
@@ -186,7 +185,6 @@ def read_and_preprocess_data_for_scvi_sctab(
         hvg_count (int): number of hvg
         seed (int): seed for random number generator
         root (str): root directory
-        AR (bool): AR flag
 
     Returns:
         train_adata (AnnData): AnnData object containing the training data
@@ -223,7 +221,7 @@ def read_and_preprocess_data_for_scvi_sctab(
     assert train_adata.obs[train_adata.obs['blood_atlas'] == 'Atlas'].shape[0] == atlas_count
 
     # select the samehvg from training data
-    path_to_original_train_adata_file = root+"/data/sctab/bloodbase_"+ \
+    path_to_original_train_adata_file = root+"/data/"+data+"/bloodbase_"+ \
         str(atlas_count)+'_atlas'+\
         "_seed"+str(seed)+"_ARFalse"+\
         "_train_adata_"+str(hvg_count)+"_"+str(hvg_count)+"HVGs.h5ad"
@@ -266,7 +264,6 @@ def create_PCA_representation_for_geometric_sketching(
     sc.pp.normalize_total(adata, target_sum=1e4)
     sc.pp.log1p(adata)
     sc.pp.pca(adata,
-              n_comps=latent_dim,
               svd_solver="arpack",
               random_state=seed)
     # check if the PCA representation is created
@@ -276,16 +273,56 @@ def create_PCA_representation_for_geometric_sketching(
     return adata
 
 
+def read_and_preprocess_data_for_scgen(
+    anndata_file,
+    obs_class_label
+):
+    """Read and preprocess data for scgen.
+    
+    Args:
+        anndata_file (str): path to the anndata file
+        obs_class_label (list): obs class label to check
+
+    Returns:
+        adata (AnnData): AnnData object containing the data
+        class_label (str): class label to check
+    """
+    adata = sc.read_h5ad(anndata_file)
+    # create a new field in the obs of the adata, and assign new category labels based on labels in the obs_class_label list
+    adata.obs['class_label'] = adata.obs[obs_class_label[0]]
+    for label in obs_class_label[1:]:
+        adata.obs['class_label'] += '_'+adata.obs[label]
+    # check if the new field is created
+    assert 'class_label' in adata.obs.columns
+    # print unique values of the new field
+    print(adata.obs['class_label'].unique())
+    # print the number of cells per category
+    print(adata.obs['class_label'].value_counts())
+
+    return adata, "class_label"
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     
+    parser.add_argument("--model", type=str, nargs='?',
+                        default="scvi",
+                        help="model: scvi, scgen")
+    parser.add_argument("--data", type=str, nargs='?',
+                        default="sctab",
+                        help="data: sctab, species")
     parser.add_argument('--anndata_blood_file', default="data/sctab/BaseModel_scTabBloodOnly_seed0_bloodbase_TrainingData.h5ad",
                         help="path to the anndata file")
     parser.add_argument('--anndata_atlas_file', default="data/sctab/BaseModel_scTabAll_seed0_allbase_TrainingData.h5ad",
                         help="path to the anndata file")
-    parser.add_argument("--obs_class_label", type=str, nargs='?',
-                        default='tissue',
+    parser.add_argument("--anndata_file", type=str, nargs='?',
+                        default="data/species.h5ad",
+                        help="path to the anndata file")
+    parser.add_argument("--obs_class_label",
+                        nargs="+",
+                        type=str,
+                        required=True,
                         help="obs class label to check")
     parser.add_argument("--training_data_count", type=int, nargs='?',
                         default=100000,
@@ -308,19 +345,21 @@ if __name__ == '__main__':
     parser.add_argument("--root", type=str, nargs='?',
                         default="/Users/zeinab/Documents/MSR_internship/project/sc-AR-github-repo/sc-AR/",
                         help="root directory")
-    parser.add_argument("--model", type=str, nargs='?',
-                        default="scvi",
-                        help="model: scvi, scgen")
 
     # parse and preprocess args
     args = parser.parse_args()
     args.anndata_atlas_file = args.root+args.anndata_atlas_file
     args.anndata_blood_file = args.root+args.anndata_blood_file
+    args.anndata_file = args.root+args.anndata_file
 
+    # check if len of obs_class_label is 1
+    if len(args.obs_class_label) == 1:
+        args.obs_class_label = args.obs_class_label[0]
 
-    # create original atlas and blood combination of training data
+    ## read and preprocess data
     if args.model == "scvi":
-        train_adata = read_and_preprocess_data_for_scvi_sctab(
+        # create original atlas and blood combination of training data
+        adata = read_and_preprocess_data_for_scvi_sctab(
             args.anndata_atlas_file,
             args.anndata_blood_file,
             args.atlas_count,
@@ -328,25 +367,31 @@ if __name__ == '__main__':
             args.seed,
             args.root,
         )
+    elif args.model == "scgen":
+        train_adata, args.obs_class_label = read_and_preprocess_data_for_scgen(
+            args.anndata_file,
+            args.obs_class_label
+        )
+    else:
+        raise ValueError("Invalid model")
     
     # balance the data
     if args.balancing_method == "geometric_sketching":
         # Create PCA representation for geometric sketching (required for this method)
         latent_dim = 100
-        train_adata = create_PCA_representation_for_geometric_sketching(
-            train_adata,
+        adata = create_PCA_representation_for_geometric_sketching(
+            adata,
             latent_dim,
             args.seed,
         )
-        train_adata = balance_data_geometric_sketching(
-            train_adata,
+        adata, args.num_covering_boxes = balance_data_geometric_sketching(
+            adata,
             args.seed,
             args.num_covering_boxes,
         )
     elif args.balancing_method == "class_balancing":
-        # PCA not needed for class balancing
-        train_adata = balance_data_class_balancing(
-            train_adata,
+        adata = balance_data_class_balancing(
+            adata,
             args.seed,
             args.obs_class_label,
         )
@@ -355,27 +400,52 @@ if __name__ == '__main__':
 
 
     # split the data into training and validation sets
-    train_adata, valid_adata = split_data(
-        train_adata,
-        args.seed,
-    )
+    if args.model == "scvi":
+        train_adata, valid_adata = split_data(
+            adata,
+            args.seed,
+        )
 
-    # check if args.root+"/data/sctab/balanced_data/" exists, if not create it
-    output_path = args.root+"/data/sctab/balanced_data/"+args.balancing_method+"/"+str(args.seed)
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
+    if args.model == 'scvi':
+        # check if args.root+"/data/$data/balanced_data/" exists, if not create it
+        output_path = args.root+"/data/"+args.data+"/balanced_data/"+args.balancing_method+"/"+str(args.seed)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
 
-    # save the balanced train and validation data
-    path_to_train_adata_file = output_path+"/bloodbase_"+ \
-        str(args.atlas_count)+'_atlas'+\
-        "_seed"+str(args.seed)+\
-        "_"+str(args.hvg_count)+"HVGs"+\
-        "_balancing_method"+args.balancing_method+"_train_adata.h5ad"
-    train_adata.write(path_to_train_adata_file)
+        # save the balanced train and validation data
+        path_to_train_adata_file = output_path+"/bloodbase_"+ \
+            str(args.atlas_count)+'_atlas'+\
+            "_seed"+str(args.seed)+\
+            "_"+str(args.hvg_count)+"HVGs"+\
+            "_"+args.balancing_method
+            
+        if args.balancing_method == "geometric_sketching":
+            "_"+str(args.num_covering_boxes)+"covering_boxes"
+            
+        path_to_train_adata_file = path_to_train_adata_file+"_train_adata.h5ad"
+        train_adata.write(path_to_train_adata_file)
 
-    path_to_valid_adata_file = output_path+"/bloodbase_"+ \
-        str(args.atlas_count)+'_atlas'+\
-        "_seed"+str(args.seed)+\
-        "_"+str(args.hvg_count)+"HVGs"+\
-        "_balancing_method"+args.balancing_method+"_valid_adata.h5ad"
-    valid_adata.write(path_to_valid_adata_file)
+        path_to_valid_adata_file = output_path+"/bloodbase_"+ \
+            str(args.atlas_count)+'_atlas'+\
+            "_seed"+str(args.seed)+\
+            "_"+str(args.hvg_count)+"HVGs"+\
+            "_"+args.balancing_method
+            
+        if args.balancing_method == "geometric_sketching":
+            "_"+str(args.num_covering_boxes)+"covering_boxes"
+        path_to_valid_adata_file = path_to_valid_adata_file+"_valid_adata.h5ad"
+        valid_adata.write(path_to_valid_adata_file)
+    
+    elif args.model == 'scgen':
+        # check if args.root+"/data/$data/balanced_data/" exists, if not create it
+        output_path = args.root+"/data/"+args.data+"/balanced_data/"
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        # save the balanced train and validation data
+        path_to_train_adata_file = output_path+"/"+args.data+"_seed"+str(args.seed)+"_"+args.balancing_method
+        
+        if args.balancing_method == "geometric_sketching":
+            path_to_train_adata_file = path_to_train_adata_file+"_"+str(args.num_covering_boxes)+"covering_boxes"
+        path_to_train_adata_file = path_to_train_adata_file+"_adata.h5ad"
+        train_adata.write(path_to_train_adata_file)

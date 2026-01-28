@@ -39,7 +39,7 @@ num_gpus=1 # 4
 
 
 ## Common Parameters ##
-seed_list=(100) # 101 102 103 104)
+seed_list=(20) # 101 102 103 104)
 AR_list=(True False)
 
 if [ $data == 'pbmc' ]; then

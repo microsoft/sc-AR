@@ -101,7 +101,7 @@ def main(args):
     ## train
     if args.train:
         # set up wandb
-        wandb_id = "MSR-"+"{:%m%d}".format(datetime.now())+'-'+args.id
+        wandb_id = "{:%m%d}".format(datetime.now())+'-'+args.id
         wandb.init(project=wandb_id,
                    config=args,
                    dir=args.root+'/',)
@@ -113,10 +113,13 @@ def main(args):
                   args.id+"_wandb_config.yaml", "w") as f:
             for key, value in config_dict.items():
                 f.write(f"{key}: {value}\n")
+        # check if cuda is available
+        if torch.cuda.is_available():
+            torch.cuda.synchronize() 
+            torch.cuda.reset_peak_memory_stats()
 
-        torch.cuda.synchronize()  # ensure accurate start
         start_time = time.time()
-        torch.cuda.reset_peak_memory_stats()
+        
         
         if args.model_name == 'scgen':
             train(args, adata)
@@ -124,10 +127,13 @@ def main(args):
         elif args.model_name == 'scvi':
             train(args, train_adata, valid_adata)
         
-        torch.cuda.synchronize()  # ensure all kernels finished
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()  # ensure all kernels finished
+            peak_mem_bytes = torch.cuda.max_memory_allocated()
+            peak_mem_gb = peak_mem_bytes / (1024**3)
+        else:
+            peak_mem_gb = 0
         training_time = time.time() - start_time
-        peak_mem_bytes = torch.cuda.max_memory_allocated()
-        peak_mem_gb = peak_mem_bytes / (1024**3)
 
         # add the training time and peak memory usage to the resource documentation file
         with open(args.resource_documentation_file, 'a') as f:
