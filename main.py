@@ -54,6 +54,10 @@ else:
     print("No GPUs available.")
 
 
+def sanitize(s):
+    return s.encode("ascii", "ignore").decode()
+
+
 def main(args):
     """Preprocess/load data, and train or test data based on input.
     
@@ -105,7 +109,7 @@ def main(args):
         print('id: ', args.id)
         print('today: ', today)
         wandb_id = today+'-'+args.id
-        wandb.init(project=wandb_id,
+        wandb.init(project=sanitize(wandb_id),
                    config=args,
                    dir=args.root+'/',)
         config_dict = wandb.config._items
