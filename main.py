@@ -101,7 +101,10 @@ def main(args):
     ## train
     if args.train:
         # set up wandb
-        wandb_id = "{:%m%d}".format(datetime.now())+'-'+args.id
+        today = datetime.now().strftime("%Y%m%d")
+        print('id: ', args.id)
+        print('today: ', today)
+        wandb_id = today+'-'+args.id
         wandb.init(project=wandb_id,
                    config=args,
                    dir=args.root+'/',)
