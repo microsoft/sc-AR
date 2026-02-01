@@ -145,7 +145,7 @@ def main(args):
         # add the training time and peak memory usage to the resource documentation file
         with open(args.resource_documentation_file, 'a') as f:
             f.write(
-                "{:%Y%m%d}".format(datetime.now())+','+
+                sanitize(today)+','+
                 args.id+','+
                 args.model_name+','+
                 args.data+','+
