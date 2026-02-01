@@ -146,21 +146,21 @@ def main(args):
         with open(args.resource_documentation_file, 'a') as f:
             f.write(
                 today+','+
-                args.id+','+
-                args.model_name+','+
+                str(args.id)+','+
+                str(args.model_name)+','+
                 args.data+','+
-                args.AR+','+
-                args.ood+','+
-                args.variable_con+','+
-                args.con_percent+','+
-                args.lr+','+
-                args.weight_decay+','+
-                args.batch_size+','+
-                args.latent_dim+','+
-                args.alpha+','+
-                args.num_epoch+','+
-                args.seed+','+
-                args.atlas_count+','+
+                str(args.AR)+','+
+                str(args.ood)+','+
+                str(args.variable_con)+','+
+                str(args.con_percent)+','+
+                str(args.lr)+','+
+                str(args.weight_decay)+','+
+                str(args.batch_size)+','+
+                str(args.latent_dim)+','+
+                str(args.alpha)+','+
+                str(args.num_epoch)+','+
+                str(args.seed)+','+
+                str(args.atlas_count)+','+
                 str(training_time)+','+
                 str(peak_mem_gb)+'\n')
 
