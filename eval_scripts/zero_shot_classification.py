@@ -28,7 +28,8 @@ def get_classification_metrics_df(train_adata_path,
                                   method,
                                   ARtype,
                                   latent_dim,
-                                  Atlas_cell_count):
+                                  Atlas_cell_count,
+                                  alpha):
     metrics_dict = defaultdict(list)
 
     if method == "scVI":
@@ -50,7 +51,7 @@ def get_classification_metrics_df(train_adata_path,
     classification_metrics["ARtype"] = ARtype
     classification_metrics["latent_dim"] = latent_dim
     classification_metrics["Atlas_cell_count"] = Atlas_cell_count
-
+    classification_metrics["alpha"] = alpha
     for key in classification_metrics:
         metrics_dict[key].append(classification_metrics[key])
 
@@ -80,6 +81,7 @@ def main():
     latent_dim = sys.argv[6]
     Atlas_cell_count = sys.argv[7]
     train_adata_path = sys.argv[8]
+    alpha = sys.argv[9]
 
 
     print(sys.argv)
@@ -113,11 +115,12 @@ def main():
             method,
             ARtype,
             latent_dim,
-            Atlas_cell_count)
+            Atlas_cell_count,
+            alpha)
 
         dataset_name = os.path.basename(dataset_name)
 
-        metrics_csv = f"zero_shot_classification_metrics_{method}_{dataset_name}_seed_{seed}_ARtype_{ARtype}_latent_dim_{latent_dim}_Atlas_cell_count_{Atlas_cell_count}.csv"
+        metrics_csv = f"zero_shot_classification_metrics_{method}_{dataset_name}_seed_{seed}_ARtype_{ARtype}_latent_dim_{latent_dim}_Atlas_cell_count_{Atlas_cell_count}_alpha_{alpha}.csv"
 
         out_dir = out_dir
 
