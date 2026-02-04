@@ -2,7 +2,7 @@
 
 # Arrays of values for each variable
 seed_values=(42 43 44 45 46)
-ARtype_values=("T" "F")
+ARtype_values=("T") # "F")
 latent_dim_values=(64)
 Atlas_cell_count=(0 1 10 100 1000 10000 50000)
 Alpha_values=(0.001 0.00001)
