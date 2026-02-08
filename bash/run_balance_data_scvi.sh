@@ -28,7 +28,7 @@ ROOT="/Users/zeinab/Documents/MSR_internship/project/sc-AR-github-repo/sc-AR/"
 MODEL="scvi"
 
 # Loop variables
-SEEDS=(42 43 44 45 46)
+SEEDS=(10 11 12 13 14)
 ATLAS_COUNTS=(0 1 10 100 1000 10000 50000)
 BALANCING_METHODS=("class_balancing" "geometric_sketching")
 

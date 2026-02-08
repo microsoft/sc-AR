@@ -170,7 +170,8 @@ def read_and_preprocess_data_for_scvi_sctab(
     atlas_count,
     hvg_count,
     seed,
-    root
+    root,
+    data
 ):
     """Read and preprocess data for scvi.
     
@@ -239,14 +240,12 @@ def read_and_preprocess_data_for_scvi_sctab(
 
 def create_PCA_representation_for_geometric_sketching(
     adata,
-    latent_dim,
     seed,
 ):
     """Create PCA representation for geometric sketching.
     
     Args:
         adata (AnnData): AnnData object containing the data (expected to be raw counts)
-        latent_dim (int): number of latent dimensions
         seed (int): seed for random number generator
 
     Returns:
@@ -265,7 +264,6 @@ def create_PCA_representation_for_geometric_sketching(
     # check if the PCA representation is created
     assert adata.obsm['X_pca'] is not None
     assert adata.obsm['X_pca'].shape[0] == adata.shape[0]
-    assert adata.obsm['X_pca'].shape[1] == latent_dim
     return adata
 
 
@@ -362,6 +360,7 @@ if __name__ == '__main__':
             args.hvg_count,
             args.seed,
             args.root,
+            args.data,
         )
     elif args.model == "scgen":
         train_adata, args.obs_class_label = read_and_preprocess_data_for_scgen(
@@ -374,10 +373,8 @@ if __name__ == '__main__':
     # balance the data
     if args.balancing_method == "geometric_sketching":
         # Create PCA representation for geometric sketching (required for this method)
-        latent_dim = 100
         adata = create_PCA_representation_for_geometric_sketching(
             adata,
-            latent_dim,
             args.seed,
         )
         adata, args.num_covering_boxes = balance_data_geometric_sketching(
