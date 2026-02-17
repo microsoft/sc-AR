@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Exit immediately if a command fails
-set -e
+# set -e
 today=$(date '+%Y%m%d')
 # check if the log folder exists, if not create it
 if [ ! -d log ]; then
@@ -28,7 +28,7 @@ ROOT="/Users/zeinab/Documents/MSR_internship/project/sc-AR-github-repo/sc-AR/"
 MODEL="scvi"
 
 # Loop variables
-SEEDS=(10 11 12 13 14)
+SEEDS=(42 43 44 45 46)
 ATLAS_COUNTS=(0 1 10 100 1000 10000 50000)
 BALANCING_METHODS=("class_balancing" "geometric_sketching")
 

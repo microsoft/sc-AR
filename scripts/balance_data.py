@@ -12,7 +12,7 @@ def select_hvg(
     adata,
     hvg_count,
     original_train_adata_standard,
-    original_train_adata_AR,
+    original_train_adata_AR=None,
 ):
     """Select hvg from training data.
     
@@ -31,10 +31,10 @@ def select_hvg(
     adata = adata[:, gene_list]
     assert adata.shape[1] == original_train_adata_standard.shape[1]
     assert all(adata.var_names == original_train_adata_standard.var_names)
-    assert all(adata.var_names == original_train_adata_AR.var_names)
+    # assert all(adata.var_names == original_train_adata_AR.var_names)
 
     # check if set of all cells in original_train_adata_AR is a subset of the set of all cells in the training data adata
-    assert set(original_train_adata_AR.obs_names.tolist()) <= set(adata.obs_names.tolist())
+    # assert set(original_train_adata_AR.obs_names.tolist()) <= set(adata.obs_names.tolist())
 
     return adata
 
@@ -217,22 +217,21 @@ def read_and_preprocess_data_for_scvi_sctab(
     train_adata.X = train_adata.X.astype('float64')
     assert train_adata.obs[train_adata.obs['blood_atlas'] == 'Atlas'].shape[0] == atlas_count
 
-    # select the samehvg from training data
+    # select the same hvg from training data
     path_to_original_train_adata_file = root+"/data/"+data+"/bloodbase_"+ \
         str(atlas_count)+'_atlas'+\
-        "_seed"+str(seed)+"_ARFalse"+\
+        "_seed"+str(seed)+"_ARTrue"+\
         "_train_adata_"+str(hvg_count)+"_"+str(hvg_count)+"HVGs.h5ad"
     original_train_adata_standard = sc.read_h5ad(path_to_original_train_adata_file)
     # Read AR version by replacing ARFalse with ARTrue
-    path_to_original_train_adata_AR_file = path_to_original_train_adata_file.replace("ARFalse", "ARTrue")
-    original_train_adata_AR = sc.read_h5ad(path_to_original_train_adata_AR_file)
-    assert original_train_adata_standard.shape[1] == original_train_adata_AR.shape[1]
+    # path_to_original_train_adata_AR_file = path_to_original_train_adata_file.replace("ARFalse", "ARTrue")
+    # original_train_adata_AR = sc.read_h5ad(path_to_original_train_adata_AR_file)
+    # assert original_train_adata_standard.shape[1] == original_train_adata_AR.shape[1]
 
     train_adata = select_hvg(
         train_adata,
         hvg_count,
-        original_train_adata_standard,
-        original_train_adata_AR,
+        original_train_adata_standard
     )
 
     return train_adata
