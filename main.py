@@ -42,11 +42,6 @@ import time
 import os
 
 
-
-
-# Print message indicating the script is being accessed
-print("This is testing that this script is getting accessed")
-
 # List available GPUs in PyTorch
 if torch.cuda.is_available():
     print(f"Available GPUs: {[torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())]}")
@@ -77,7 +72,6 @@ def main(args):
     print()
 
     ## load and prepare data
-    
     if args.model_name == 'scgen':
         adata = load_and_preprocess_data(args)
         
@@ -126,7 +120,6 @@ def main(args):
             torch.cuda.reset_peak_memory_stats()
 
         start_time = time.time()
-        
         
         if args.model_name == 'scgen':
             train(args, adata)
@@ -224,7 +217,7 @@ if __name__ == '__main__':
     parser.add_argument("--count_atlas_cells", type=str2bool, nargs='?',
                         const=True, default=False,
                         help="Count atlas cells in training data")
-    parser.add_argument("--plot_umap_annotated_with_w", ## TODO: set default to False
+    parser.add_argument("--plot_umap_annotated_with_w",
                         type=str2bool, nargs='?', 
                         const=True, default=False,
                         help="True or False")
@@ -240,7 +233,7 @@ if __name__ == '__main__':
                         const=True, default=False,
                         help="True or False")
     parser.add_argument("--balancing_method", default=None,
-                        help="balancing method")
+                        help="balancing method from class_balancing or geometric_sketching")
 
 
     # model related arguments
@@ -279,9 +272,9 @@ if __name__ == '__main__':
                         help="alpha")
 
     # data related argument
-    parser.add_argument('--data', type=str, default="ajay",
+    parser.add_argument('--data', type=str, default="sctab",
                         help='name or id of the input data')
-    parser.add_argument('--data_path', type=str, default='../data/ajay/',
+    parser.add_argument('--data_path', type=str, default='../data/sctab/',
                         help='if not None, the path to the data folder')
     parser.add_argument('--h5ad_adata_file', type=str, default=None,
                         help='if not None, the path to input adata file')
@@ -307,7 +300,7 @@ if __name__ == '__main__':
                         help="in distirbution test cell group")
     parser.add_argument('--out_path', default='./saved_models/',
                         help="path to save the model ckpts")
-    parser.add_argument('--atlas_count', default=0, type=int,
+    parser.add_argument('--atlas_count', default=None, type=int,
                         help='number of atlas cells included in training, combined with blood cells')
 
     # misc arguments
@@ -318,7 +311,7 @@ if __name__ == '__main__':
                         help='value of  adata_label_cell for perturbed cells in adata')
     parser.add_argument('--adata_label_unper', default=None,
                         help='value of adata_label_cell for unperturbed cells in adata')
-    parser.add_argument('--checkpoint', default=20,
+    parser.add_argument('--checkpoint', default=100,
                         help="checkpoint for saving model")
     parser.add_argument("--gpu", type=str2bool, nargs='?',
                         const=True, default=True,
@@ -369,7 +362,9 @@ if __name__ == '__main__':
         else:
             args.model = 'Naive'
 
-    
+    if args.balanced_data:
+        args.out_path = args.out_path + "balanced_data/" + args.balancing_method + "/" + str(args.seed) + "/"
+
 
     main(args)
     print('Finished main.py')
