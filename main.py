@@ -109,11 +109,18 @@ def main(args):
         config_dict = wandb.config._items
 
         # Save the configuration to a local file
-        with open(args.out_path+args.data +
-                  "/seed"+str(args.seed)+'/config/'+
-                  args.id+"_wandb_config.yaml", "w") as f:
-            for key, value in config_dict.items():
-                f.write(f"{key}: {value}\n")
+        if not args.balanced_data:
+            with open(args.out_path+args.data +
+                      "/seed"+str(args.seed)+'/config/'+
+                      args.id+"_wandb_config.yaml", "w") as f:
+                for key, value in config_dict.items():
+                    f.write(f"{key}: {value}\n")
+        else:
+            with open(args.out_path+"/"+
+                      args.id+"_wandb_config.yaml", "w") as f:
+                for key, value in config_dict.items():
+                    f.write(f"{key}: {value}\n")
+
         # check if cuda is available
         if torch.cuda.is_available():
             torch.cuda.synchronize() 
