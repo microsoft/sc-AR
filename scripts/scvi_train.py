@@ -296,10 +296,10 @@ class scAR:
 
         ## save the best epoch in the config file
         if not self.balanced_data:
-        with open(self.out_path+self.data +
-                    "/seed"+str(self.seed)+'/config/'+
-                    self.id+"_wandb_config.yaml", "a") as f:
-                f.write("best_epoch: "+str(self.best_epoch)+"\n")
+            with open(self.out_path+self.data +
+                        "/seed"+str(self.seed)+'/config/'+
+                        self.id+"_wandb_config.yaml", "a") as f:
+                    f.write("best_epoch: "+str(self.best_epoch)+"\n")
         else:
             with open(self.out_path+"/config/"+
                     self.id+"_wandb_config.yaml", "a") as f:
