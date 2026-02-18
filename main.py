@@ -364,6 +364,9 @@ if __name__ == '__main__':
 
     if args.balanced_data:
         args.out_path = args.out_path + "balanced_data/" + args.balancing_method + "/" + str(args.seed) + "/"
+        # check if the out_path exists, if not create it
+        if not os.path.exists(args.out_path):
+            os.makedirs(args.out_path)
 
 
     main(args)
