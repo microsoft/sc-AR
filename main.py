@@ -116,7 +116,10 @@ def main(args):
                 for key, value in config_dict.items():
                     f.write(f"{key}: {value}\n")
         else:
-            with open(args.out_path+"/"+
+            # check if args.out_path+"/config/" exists, if not create it
+            if not os.path.exists(args.out_path+"/config/"):
+                os.makedirs(args.out_path+"/config/")
+            with open(args.out_path+"/config/"+
                       args.id+"_wandb_config.yaml", "w") as f:
                 for key, value in config_dict.items():
                     f.write(f"{key}: {value}\n")
