@@ -28,8 +28,8 @@ for balancing_method in "${balancing_methods[@]}"; do
     for seed in "${seeds[@]}"; do
         for atlas_count in "${atlas_counts[@]}"; do
 
-        train_adata_path="${data_path}/${data}/balanced_data/${balancing_method}/${seed}/bloodbase_${atlas_count}_atlas_seed${seed}_2000HVGs_balancing_method${balancing_method}_train_adata.h5ad"
-        valid_adata_path="${data_path}/${data}/balanced_data/${balancing_method}/${seed}/bloodbase_${atlas_count}_atlas_seed${seed}_2000HVGs_balancing_method${balancing_method}_valid_adata.h5ad"
+        train_adata_path="${data_path}/${data}/balanced_data/${balancing_method}/${seed}/bloodbase_${atlas_count}_atlas_seed${seed}_2000HVGs_${balancing_method}_train_adata.h5ad"
+        valid_adata_path="${data_path}/${data}/balanced_data/${balancing_method}/${seed}/bloodbase_${atlas_count}_atlas_seed${seed}_2000HVGs_${balancing_method}_valid_adata.h5ad"
 
         echo "======================================"
         echo "Running:"
