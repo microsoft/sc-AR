@@ -295,15 +295,15 @@ class scAR:
         np.savetxt(file, np.array(self.valid_loss_elbo_list, dtype=float), delimiter=',')
 
         ## save the best epoch in the config file
-        if not self.balanced_data:
+        if ('class_balancing' in self.out_path) | ('geometric_sketching' in self.out_path):
+            with open(self.out_path+"/config/"+
+                    self.id+"_wandb_config.yaml", "a") as f:
+                f.write("best_epoch: "+str(self.best_epoch)+"\n")
+        else:
             with open(self.out_path+self.data +
                         "/seed"+str(self.seed)+'/config/'+
                         self.id+"_wandb_config.yaml", "a") as f:
                     f.write("best_epoch: "+str(self.best_epoch)+"\n")
-        else:
-            with open(self.out_path+"/config/"+
-                    self.id+"_wandb_config.yaml", "a") as f:
-                f.write("best_epoch: "+str(self.best_epoch)+"\n")
 
         return
 
