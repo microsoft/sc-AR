@@ -29,7 +29,8 @@ def get_classification_metrics_df(train_adata_path,
                                   ARtype,
                                   latent_dim,
                                   Atlas_cell_count,
-                                  alpha):
+                                  alpha,
+                                  balancing_method):
     metrics_dict = defaultdict(list)
 
     if method == "scVI":
@@ -52,6 +53,7 @@ def get_classification_metrics_df(train_adata_path,
     classification_metrics["latent_dim"] = latent_dim
     classification_metrics["Atlas_cell_count"] = Atlas_cell_count
     classification_metrics["alpha"] = alpha
+    classification_metrics["balancing_method"] = balancing_method
     for key in classification_metrics:
         metrics_dict[key].append(classification_metrics[key])
 
@@ -82,6 +84,14 @@ def main():
     Atlas_cell_count = sys.argv[7]
     train_adata_path = sys.argv[8]
     alpha = sys.argv[9]
+
+    balancing_method = None
+    if "class_balancing" in model_path:
+        balancing_method = "class_balancing"
+    elif "geometric_sketching" in model_path:
+        balancing_method = "geometric_sketching"
+    else:
+        raise ValueError("Invalid balancing method")
 
 
     print(sys.argv)
@@ -116,11 +126,12 @@ def main():
             ARtype,
             latent_dim,
             Atlas_cell_count,
-            alpha)
+            alpha,
+            balancing_method)
 
         dataset_name = os.path.basename(dataset_name)
 
-        metrics_csv = f"zero_shot_classification_metrics_{method}_{dataset_name}_seed_{seed}_ARtype_{ARtype}_latent_dim_{latent_dim}_Atlas_cell_count_{Atlas_cell_count}_alpha_{alpha}.csv"
+        metrics_csv = f"zero_shot_classification_metrics_{method}_{dataset_name}_seed_{seed}_ARtype_{ARtype}_latent_dim_{latent_dim}_Atlas_cell_count_{Atlas_cell_count}_alpha_{alpha}_{balancing_method}.csv"
 
         out_dir = out_dir
 
