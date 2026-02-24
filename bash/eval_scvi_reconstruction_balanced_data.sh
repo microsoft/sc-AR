@@ -37,7 +37,7 @@ for seed in "${seed_values[@]}"; do
                         python -u ../eval_scripts/LDVAE_eval.py \
                             "../data/sctab" \
                             "../data/sctab/balanced_data/${balancing_method}/${seed}/bloodbase_${Atlas_cell_count}_atlas_seed${seed}_2000HVGs_${balancing_method}_train_adata.h5ad" \
-                            "../saved_models/balanced_data/${balancing_method}/${seed}/bloodbase-${Atlas_cell_count}atlas-AR${ARtype}-lr5e-05-wd5e-05-bs4096-ldim${latent_dim}-alpha${alpha}-epoch300-scvi-hvg2000-s${seed}-best" \
+                            "../saved_models/balanced_data/${balancing_method}/${seed}/${data}/seed${seed}/bloodbase-${Atlas_cell_count}atlas-AR${ARtype}-lr5e-05-wd5e-05-bs4096-ldim${latent_dim}-alpha${alpha}-epoch300-${balancing_method}-scvi-hvg2000-s${seed}-best" \
                             "../result/test/scVI-reconstruction-evals-balanced-data" \
                             ${seed} \
                             ${ARtype} \
