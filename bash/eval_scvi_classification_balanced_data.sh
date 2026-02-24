@@ -7,7 +7,7 @@ latent_dim_values=(64)
 Atlas_cell_count=(0 1 10 100 1000 10000 50000)
 Alpha_values=(0.0001)
 balancing_methods=("class_balancing" "geometric_sketching")
-
+data="sctab"
 # activate the conda environment
 eval "$(conda shell.bash hook)"
 source activate scAR-env
@@ -30,7 +30,7 @@ for seed in "${seed_values[@]}"; do
 
                         python -u ../eval_scripts/zero_shot_classification.py \
                             scVI \
-                            "../saved_models/balanced_data/${balancing_method}/${seed}/bloodbase-${Atlas_cell_count}atlas-AR${ARtype}-lr5e-05-wd5e-05-bs4096-ldim${latent_dim}-alpha${alpha}-epoch300-scvi-hvg2000-s${seed}-best" \
+                            "../saved_models/balanced_data/${balancing_method}/${seed}/${data}/seed${seed}/bloodbase-${Atlas_cell_count}atlas-AR${ARtype}-lr5e-05-wd5e-05-bs4096-ldim${latent_dim}-alpha${alpha}-epoch300-${balancing_method}-scvi-hvg2000-s${seed}-best" \
                             ${seed} \
                             "../result/test/scVI-classification-evals-balanced-data" \
                             ${ARtype} \
