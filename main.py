@@ -142,6 +142,7 @@ def main(args):
             peak_mem_bytes = torch.cuda.max_memory_allocated()
             peak_mem_gb = peak_mem_bytes / (1024**3)
         else:
+            print("No GPUs available.")
             peak_mem_gb = 0
         training_time = time.time() - start_time
 

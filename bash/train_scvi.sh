@@ -52,7 +52,7 @@ echo "batch_size:" $batch_size
 echo "alpha:" $alpha
 echo ""
 
-python -u ${root}/main.py \
+CUDA_VISIBLE_DEVICES=0 python -u ${root}/main.py \
     --root ${root} \
     --data ${data} \
     --data_path ${data_path} \
