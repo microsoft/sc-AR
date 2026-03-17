@@ -91,7 +91,8 @@ def main():
     elif "geometric_sketching" in model_path:
         balancing_method = "geometric_sketching"
     else:
-        raise ValueError("Invalid balancing method")
+        balancing_method = "Original Combination"
+        # raise ValueError("Invalid balancing method")
 
 
     print(sys.argv)

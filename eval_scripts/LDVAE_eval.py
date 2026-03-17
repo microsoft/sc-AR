@@ -22,7 +22,8 @@ if "class_balancing" in model_path:
 elif "geometric_sketching" in model_path:
     balancing_method = "geometric_sketching"
 else:
-    raise ValueError("Invalid balancing method")
+    balancing_method = "Original Combination"
+    # raise ValueError("Invalid balancing method")
 
 # check if eval_output_dir exists, if not create it
 if not os.path.exists(eval_output_dir):
