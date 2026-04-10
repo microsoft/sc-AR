@@ -3,17 +3,22 @@ echo "Starting the script"
 # Assign input parameters to variables
 data=sctab            # data base name, e.g., sctab
 data_path=./data       # path to the /dataset/ folder
-out_path=./saved_models        # path to the folder for saving trained models (ends with /saved_models/)
+out_path=./saved_models/        # path to the folder for saving trained models (ends with /saved_models/)
 seeds=(50 60 70 80 90)            # seed number
 log_path=./log        # path to save logs
 root=../            # root folder of the project
 model_name=scvi      # model type: scvi or scgen
-latent_dims=(32 128)      # latent dimension
-num_epochs=(150 600)       # number of epochs
 ARs=(True False)           # AR flag: True or False
 atlas_counts=(0 1 10 100 1000 10000 50000)  # number of atlas cells, e.g., 0, 1, 10, 100, 1000, 10000, 50000
 alpha=0.0001        # alpha value for smoothing
 
+
+latent_dim_epoch_pairs=(
+    (64 150)
+    (64 600)
+    (32 300)
+    (128 300)
+)
 
 # activate the conda environment
 eval "$(conda shell.bash hook)"
@@ -41,10 +46,11 @@ batch_size=4096
 ############################
 echo "Starting the loop"
 for seed in "${seeds[@]}"; do
-    for num_epoch in "${num_epochs[@]}"; do
-        for latent_dim in "${latent_dims[@]}"; do
-          for AR in "${ARs[@]}"; do
-              for atlas_count in "${atlas_counts[@]}"; do
+    for latent_dim_epoch_pair in "${latent_dim_epoch_pairs[@]}"; do
+        latent_dim=${latent_dim_epoch_pair[0]}
+        num_epoch=${latent_dim_epoch_pair[1]}
+        for AR in "${ARs[@]}"; do
+            for atlas_count in "${atlas_counts[@]}"; do
                 echo "Running scvi for seed ${seed}, num_epoch ${num_epoch}, AR ${AR}, atlas_count ${atlas_count}"
 
                 echo "=============================================="
