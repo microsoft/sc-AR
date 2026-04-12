@@ -85,15 +85,11 @@ def main():
     train_adata_path = sys.argv[8]
     alpha = sys.argv[9]
 
-    balancing_method = None
+    balancing_method = ''
     if "class_balancing" in model_path:
         balancing_method = "class_balancing"
     elif "geometric_sketching" in model_path:
         balancing_method = "geometric_sketching"
-    else:
-        balancing_method = "Original Combination"
-        # raise ValueError("Invalid balancing method")
-
 
     print(sys.argv)
     
