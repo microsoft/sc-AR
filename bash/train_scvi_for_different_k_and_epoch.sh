@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -n 1
-#SBATCH --mem=120G
+#SBATCH --mem=8G
 #SBATCH -t 1:00:00
 #SBATCH -c 2
 #SBATCH -p gpu
