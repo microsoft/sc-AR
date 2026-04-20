@@ -2,7 +2,7 @@
 #SBATCH -n 1
 #SBATCH --mem=120G
 #SBATCH -t 1:00:00
-#SBATCH -c 23
+#SBATCH -c 2
 #SBATCH -p gpu
 #SBATCH --gres=gpu:1
 #SBATCH -J gpu_train_scAR
