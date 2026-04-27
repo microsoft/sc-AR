@@ -338,7 +338,7 @@ if __name__ == '__main__':
     args.batch_size = int(args.batch_size)
     args.latent_dim = int(args.latent_dim)
     args.alpha = float(args.alpha)
-    args.epochs = int(args.epochs)
+    args.num_epoch = int(args.num_epoch)
     args.bins = int(args.bins)
     if args.resource_documentation_file == '':
         args.resource_documentation_file = args.root + '/result/train/resources.csv'
