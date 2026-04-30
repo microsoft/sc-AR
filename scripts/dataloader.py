@@ -218,7 +218,7 @@ def read_and_preprocess_data_for_scvi_sctab(args):
     assert all(train_adata.var_names == valid_adata.var_names)
 
     test_adata = None
-    if (args.predict or args.test) and (not args.plot_umap_annotated_with_w):
+    if (args.predict or args.test) and (not args.plot_umap_annotated_with_w) and (not args.store_resampling_weights):
 
         gene_list_saved = pd.read_csv(
             path_to_train_adata_gene_file, header=None)[0].tolist()

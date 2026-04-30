@@ -1,4 +1,37 @@
 #!/bin/bash
+#SBATCH -n 1
+#SBATCH --mem=300G
+#SBATCH -t 06:00:00
+#SBATCH -c 45
+#SBATCH -p gpu
+#SBATCH --gres=gpu:4
+#SBATCH -J gpu_eval_scAR
+#SBATCH -o output/%x_%j.out    
+#SBATCH -e error/%x_%j.err    
+
+# Email notifications
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=akshaya_thoutam@brown.edu
+
+# Unload all modules (important)
+module purge
+
+## Please check the version of cuda and cudnn
+module load cuda/11.8.0-kuhf
+# module load cudnn/8.7.0.84-11.8-kff3
+
+# activate the conda environment
+eval "$(conda shell.bash hook)"
+source activate scar-env
+export WANDB_KEY=''
+
+# Debug: confirm which python is being used
+which python
+# python -c "import sys; print('Python path:', sys.executable); import scanpy; print('Scanpy OK')"
+# python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.version.cuda)"
+python -c "import torch; print(torch.cuda.device_count()); print(torch.cuda.get_device_name(0))"
+
+
 
 # Arrays of values for each variable
 seed_values=(50 60 70 80 90)

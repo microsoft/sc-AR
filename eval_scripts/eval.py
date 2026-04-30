@@ -993,8 +993,8 @@ def test_scvi(args, train_adata):
         args (argparse.Namespace): Arguments passed to the script.
         train_adata (anndata.AnnData): Anndata object containing the training data."""
     
-    all_adata = train_adata.copy()
-    print('all_adata shape: ', all_adata.shape)
+    train_adata_copy = train_adata.copy()
+    print('train_adata_copy shape: ', train_adata_copy.shape)
 
     # plot umap plots annotated by AR weights
     if args.plot_umap_annotated_with_w:
@@ -1008,9 +1008,32 @@ def test_scvi(args, train_adata):
             else:
                 path_to_model_folder = path_to_model_folder + \
                     '-epoch'+str(args.tracked_epoch)
-            model = scvi.model.SCVI.load(path_to_model_folder, all_adata)
+            model = scvi.model.SCVI.load(path_to_model_folder, train_adata_copy)
             # plot_umap_with_weight_annotation(all_adata, args, model, 'latent')
-            plot_umap_with_weight_annotation(all_adata, args, model, 'high_dim')
+            plot_umap_with_weight_annotation(train_adata_copy, args, model, 'high_dim')
             return
     
+    # store resampling weights
+    if args.store_resampling_weights:
+        if 'AR' in args.model:
+            args.AR = True
+            create_id(args)
+            path_to_model_folder = args.out_path+args.data+"/seed"+str(args.seed) + \
+                '/'+args.id
+            if args.tracked_epoch == 'best':
+                path_to_model_folder = path_to_model_folder+'-best'
+            else:
+                path_to_model_folder = path_to_model_folder + \
+                    '-epoch'+str(args.tracked_epoch)
+            model = scvi.model.SCVI.load(path_to_model_folder, train_adata_copy)
+            with torch.no_grad():
+
+                z = model.get_latent_representation(train_adata_copy)
+                # calculate the resampling weights
+                w = update_training_sample_probabilities(z)
+
+                # save the resampling weights in a csv file
+                resampling_weights_df = pd.DataFrame({'resampling_weight': w})
+                resampling_weights_df.to_csv(args.resampling_weight_path, index=False)
+                print('saved resampling weights to: '+args.resampling_weight_path)
     return
