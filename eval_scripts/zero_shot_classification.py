@@ -30,7 +30,8 @@ def get_classification_metrics_df(train_adata_path,
                                   latent_dim,
                                   Atlas_cell_count,
                                   alpha,
-                                  balancing_method):
+                                  balancing_method,
+                                  epoch_num):
     metrics_dict = defaultdict(list)
 
     if method == "scVI":
@@ -54,6 +55,7 @@ def get_classification_metrics_df(train_adata_path,
     classification_metrics["Atlas_cell_count"] = Atlas_cell_count
     classification_metrics["alpha"] = alpha
     classification_metrics["balancing_method"] = balancing_method
+    classification_metrics["epoch_num"] = epoch_num
     for key in classification_metrics:
         metrics_dict[key].append(classification_metrics[key])
 
@@ -84,6 +86,7 @@ def main():
     Atlas_cell_count = sys.argv[7]
     train_adata_path = sys.argv[8]
     alpha = sys.argv[9]
+    epoch_num = sys.argv[10]
 
     balancing_method = ''
     if "class_balancing" in model_path:
@@ -124,11 +127,12 @@ def main():
             latent_dim,
             Atlas_cell_count,
             alpha,
-            balancing_method)
+            balancing_method,
+            epoch_num)
 
         dataset_name = os.path.basename(dataset_name)
 
-        metrics_csv = f"zero_shot_classification_metrics_{method}_{dataset_name}_seed_{seed}_ARtype_{ARtype}_latent_dim_{latent_dim}_Atlas_cell_count_{Atlas_cell_count}_alpha_{alpha}_{balancing_method}.csv"
+        metrics_csv = f"zero_shot_classification_metrics_{method}_{dataset_name}_seed_{seed}_ARtype_{ARtype}_latent_dim_{latent_dim}_Atlas_cell_count_{Atlas_cell_count}_alpha_{alpha}_epoch_{epoch_num}_{balancing_method}.csv"
 
         out_dir = out_dir
 

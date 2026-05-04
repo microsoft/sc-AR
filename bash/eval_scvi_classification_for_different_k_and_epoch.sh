@@ -80,7 +80,8 @@ for seed in "${seed_values[@]}"; do
                     ${latent_dim} \
                     ${Atlas_cell_count} \
                     "../data/sctab/bloodbase_${Atlas_cell_count}_atlas_seed${seed}_AR${AR}_train_adata_2000_2000HVGs.h5ad" \
-                    ${Alpha_values}
+                    ${Alpha_values} \
+                    ${num_epoch}
             done
         done
     done
