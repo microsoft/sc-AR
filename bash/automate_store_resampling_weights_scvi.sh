@@ -45,7 +45,11 @@ for s in "${seeds[@]}"; do
   for atlas_count in "${atlas_counts[@]}"; do
     for t in "${tracked_epoch[@]}"; do
 
-      resampling_weight_path_current="${resampling_weight_path}/resampling_weights_${data}_${model}_epoch${num_epoch}_varcon${variable_con}_conper${con_percent}_seed${s}_${model_name}_atlascount${atlas_count}_trackedepoch${t}.csv"
+      resampling_weight_path_current="${resampling_weight_path}/$data/$s/$model_name/resampling_weights_${data}_${model}_epoch${num_epoch}_seed${s}_${model_name}_ldim${latent_dim}_atlascount${atlas_count}_trackedepoch${t}.csv"
+      # check if ${resampling_weight_path}/$data/$s/$model_name/ exists, if not, create it
+      if [ ! -d "${resampling_weight_path}/$data/$s/$model_name/" ]; then
+        mkdir -p "${resampling_weight_path}/$data/$s/$model_name/"
+      fi
 
       echo "data: ${data}"
       echo "model: ${model}"
@@ -63,8 +67,8 @@ for s in "${seeds[@]}"; do
       echo "atlas_count: ${atlas_count}"
       echo "resampling_weight_path: ${resampling_weight_path_current}"
 
-      log_file="${log_path}/$today/${today}-standard-${data}-${model}-epoch${num_epoch}-varcon${variable_con}-conper${con_percent}-seed${s}-trackedepoch${t}-atlascount${atlas_count}-${model_name}-test.txt"
-      err_file="${log_path}/$today/${today}-standard-${data}-${model}-epoch${num_epoch}-varcon${variable_con}-conper${con_percent}-seed${s}-trackedepoch${t}-atlascount${atlas_count}-${model_name}-test.err"
+      log_file="${log_path}/$today/${today}-standard-${data}-${model}-epoch${num_epoch}-seed${s}-trackedepoch${t}-ldim${latent_dim}-atlascount${atlas_count}-${model_name}-test.txt"
+      err_file="${log_path}/$today/${today}-standard-${data}-${model}-epoch${num_epoch}-seed${s}-trackedepoch${t}-ldim${latent_dim}-atlascount${atlas_count}-${model_name}-test.err"
 
       "${SCRIPT_DIR}/store_resampling_weights_scvi.sh" \
         "${data}" \

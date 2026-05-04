@@ -78,6 +78,7 @@ echo out_path: ${out_path}
 echo latent_dim: ${latent_dim}
 echo root: ${root}
 echo atlas_count: ${atlas_count}
+echo resampling_weight_path: ${resampling_weight_path}
 
 
 eval "$(conda shell.bash hook)"

@@ -27,22 +27,20 @@ export WANDB_KEY=''
 
 # Debug: confirm which python is being used
 which python
-# python -c "import sys; print('Python path:', sys.executable); import scanpy; print('Scanpy OK')"
-# python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.version.cuda)"
 python -c "import torch; print(torch.cuda.device_count()); print(torch.cuda.get_device_name(0))"
 
 
 # Assign input parameters to variables
-data=sctab            # data base name, e.g., sctab
-data_path=../data       # path to the /dataset/ folder
-out_path=../saved_models/        # path to the folder for saving trained models (ends with /saved_models/)
-seeds=(50 60 70 80 90)            # seed number
-log_path=./log        # path to save logs
-root=../            # root folder of the project
-model_name=scvi      # model type: scvi or scgen
-ARs=(True False)           # AR flag: True or False
-atlas_counts=(0 1 10 100 1000 10000 50000)  # number of atlas cells, e.g., 0, 1, 10, 100, 1000, 10000, 50000
-alpha=0.0001        # alpha value for smoothing
+data=sctab                                   # data base name, e.g., sctab
+data_path=../data                            # path to the /dataset/ folder
+out_path=../saved_models/                    # path to the folder for saving trained models (ends with /saved_models/)
+seeds=(50 60 70 80 90)                       # seed number
+log_path=./log                               # path to save logs
+root=../                                     # root folder of the project
+model_name=scvi                              # model type: scvi or scgen
+ARs=(True False)                             # AR flag: True or False
+atlas_counts=(0 1 10 100 1000 10000 50000)   # number of atlas cells, e.g., 0, 1, 10, 100, 1000, 10000, 50000
+alpha=0.0001                                 # alpha value for smoothing
 
 
 latent_dim_epoch_pairs=(
@@ -69,7 +67,7 @@ batch_size=4096
 
 
 ############################
-# Loop
+## Loop
 ############################
 echo "Starting the loop"
 for seed in "${seeds[@]}"; do

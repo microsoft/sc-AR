@@ -27,8 +27,6 @@ export WANDB_KEY=''
 
 # Debug: confirm which python is being used
 which python
-# python -c "import sys; print('Python path:', sys.executable); import scanpy; print('Scanpy OK')"
-# python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.version.cuda)"
 python -c "import torch; print(torch.cuda.device_count()); print(torch.cuda.get_device_name(0))"
 
 

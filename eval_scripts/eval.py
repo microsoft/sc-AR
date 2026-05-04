@@ -1034,15 +1034,8 @@ def test_scvi(args, train_adata):
 
                 # save the resampling weights in a csv file
                 resampling_weights_df = pd.DataFrame({'resampling_weight': w})
-                # create a args.resampling_weight_path/args.data/seed/model_name/args.id+_atlascount${atlas_count}_trackedepoch${t}.csv file if it doesn't exist
-                resampling_weights_path = args.resampling_weight_path+'/'+ \
-                    args.data+'/seed'+str(args.seed)+'/'+args.model_name+'/'+ \
-                        args.id+'_trackedepoch'+str(args.tracked_epoch)+'.csv'
-                if not os.path.isfile(resampling_weights_path):
-                    os.makedirs(os.path.dirname(resampling_weights_path), exist_ok=True)
-                    resampling_weights_df.to_csv(resampling_weights_path, index=False)
-                    print('saved resampling weights to: '+resampling_weights_path)
-                else:
-                    resampling_weights_df.to_csv(resampling_weights_path, mode='a', index=False, header=False)
-                    print('appended resampling weights to: '+resampling_weights_path)
+                # assert number of rows in resampling_weights_df is equal to number of rows in train_adata_copy
+                assert resampling_weights_df.shape[0] == train_adata_copy.shape[0]
+                resampling_weights_df.to_csv(args.resampling_weight_path, index=False)
+                print('saved resampling weights to: '+args.resampling_weight_path)
     return
