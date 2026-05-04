@@ -348,7 +348,7 @@ if __name__ == '__main__':
     args.num_epoch = int(args.num_epoch)
     args.bins = int(args.bins)
     if args.resource_documentation_file == '':
-        args.resource_documentation_file = args.root + '/result/train/resources.csv'
+        args.resource_documentation_file = args.root + 'result/train/resources.csv'
 
     # check if parent directory of resource documentation file exists
     if not os.path.exists(os.path.dirname(args.resource_documentation_file)):
