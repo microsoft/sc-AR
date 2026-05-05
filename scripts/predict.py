@@ -183,7 +183,9 @@ def predict(args, adata=None):
     if not os.path.exists(args.root+"/prediction/"+args.data+"/seed"+str(args.seed)):
         os.makedirs(args.root+"/prediction/"+args.data+"/seed"+str(args.seed))
 
+    print('args.model: ', args.model)
     models = args.model.split(',')
+    print("Models to predict:", models)
     for model_name in models:
         print("Predicting with model:", model_name)
         args.AR = False if model_name == 'Naive' else True
