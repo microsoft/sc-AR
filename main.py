@@ -239,6 +239,13 @@ if __name__ == '__main__':
     parser.add_argument("--resampling_weight_path",
                         type=str, default=None,
                         help="Path to store resampling weights")
+    parser.add_argument("--store_weight_diagnostics",
+                        type=str2bool, nargs='?',
+                        const=True, default=False,
+                        help="True or False")
+    parser.add_argument("--weight_diagnostics_path",
+                        type=str, default=None,
+                        help="Path to store weight diagnostics (normalized entropy and ESS)")
     parser.add_argument("--degs_extraction_based_on_resampling_w",
                         type=str2bool, nargs='?',
                         const=True, default=False,

@@ -1038,4 +1038,39 @@ def test_scvi(args, train_adata):
                 assert resampling_weights_df.shape[0] == train_adata_copy.shape[0]
                 resampling_weights_df.to_csv(args.resampling_weight_path, index=False)
                 print('saved resampling weights to: '+args.resampling_weight_path)
+
+    # store weight diagnostics (normalized entropy and ESS)
+    if args.store_weight_diagnostics:
+        if 'AR' in args.model:
+            args.AR = True
+            create_id(args)
+            path_to_model_folder = args.out_path+args.data+"/seed"+str(args.seed) + \
+                '/'+args.id
+            if args.tracked_epoch == 'best':
+                path_to_model_folder = path_to_model_folder+'-best'
+            else:
+                path_to_model_folder = path_to_model_folder + \
+                    '-epoch'+str(args.tracked_epoch)
+            model = scvi.model.SCVI.load(path_to_model_folder, train_adata_copy)
+            with torch.no_grad():
+                z = model.get_latent_representation(train_adata_copy)
+                w = update_training_sample_probabilities(z)
+
+                n = len(w)
+                # normalized Shannon entropy: 1 = uniform weights, 0 = all mass on one cell
+                entropy = -np.sum(w * np.log(w + 1e-12))
+                entropy_normalized = entropy / np.log(n)
+                # effective sample size: how many cells are effectively being sampled
+                ess = 1.0 / np.sum(w ** 2)
+                ess_normalized = ess / n
+
+                diagnostics_df = pd.DataFrame({
+                    'entropy_normalized': [entropy_normalized],
+                    'ess': [ess],
+                    'ess_normalized': [ess_normalized],
+                })
+                diagnostics_df.to_csv(args.weight_diagnostics_path, index=False)
+                print('entropy_normalized: ', entropy_normalized)
+                print('ess_normalized: ', ess_normalized)
+                print('saved weight diagnostics to: '+args.weight_diagnostics_path)
     return
