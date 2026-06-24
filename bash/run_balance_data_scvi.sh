@@ -30,7 +30,7 @@ MODEL="scvi"
 # Loop variables
 SEEDS=(42 43 44 45 46)
 ATLAS_COUNTS=(0 1 10 100 1000 10000 50000)
-BALANCING_METHODS=("class_balancing" "geometric_sketching")
+BALANCING_METHODS=("geometric_sketching") #("class_balancing" "geometric_sketching")
 
 for SEED in "${SEEDS[@]}"; do
   for ATLAS_COUNT in "${ATLAS_COUNTS[@]}"; do

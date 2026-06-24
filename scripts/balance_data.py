@@ -70,7 +70,6 @@ def balance_data_class_balancing(
             sampled_indices = np.random.choice(indices, size=sample_count_per_class, replace=True)  
         
         all_indices.extend(sampled_indices)
-        
 
     # check if balanced_adata.shape[0] != adata.shape[0], count the difference and randomly sample from the difference to make the number of cells equal to the original number of cells
     if len(all_indices) != adata.shape[0]:
@@ -371,6 +370,7 @@ if __name__ == '__main__':
     
     # balance the data
     if args.balancing_method == "geometric_sketching":
+        start_time = time.time()
         # Create PCA representation for geometric sketching (required for this method)
         adata = create_PCA_representation_for_geometric_sketching(
             adata,
@@ -381,6 +381,8 @@ if __name__ == '__main__':
             args.seed,
             args.num_covering_boxes,
         )
+        end_time = time.time()
+        print("Time taken to create PCA representation and balance data for geometric sketching: ", end_time - start_time, "seconds")
     elif args.balancing_method == "class_balancing":
         adata = balance_data_class_balancing(
             adata,
