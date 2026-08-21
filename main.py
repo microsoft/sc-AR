@@ -254,6 +254,10 @@ if __name__ == '__main__':
                         type=str2bool, nargs='?',
                         const=True, default=False,
                         help="True or False")
+    parser.add_argument("--rebuttal2",
+                        type=str2bool, nargs='?',
+                        const=True, default=True,
+                        help="True or False")
     parser.add_argument("--balanced_data", type=str2bool, nargs='?',
                         const=True, default=False,
                         help="True or False")

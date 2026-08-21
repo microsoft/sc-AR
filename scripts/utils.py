@@ -112,6 +112,9 @@ def create_id(args):
             
         if args.hvg_count != None:
             args.id = args.id+'-hvg'+str(args.hvg_count)
+        if args.rebuttal2:
+            if args.AR:
+                args.id = args.id+'-bins'+str(args.bins)
         args.id = args.id+'-s'+str(args.seed)
 
 
