@@ -16,6 +16,7 @@ latent_dim = sys.argv[7]
 Atlas_cell_count = sys.argv[8]
 alpha = sys.argv[9]
 epoch_num = sys.argv[10]
+bins = sys.argv[11] if len(sys.argv) > 11 else "100"
 
 balancing_method = None
 if "class_balancing" in model_path:
@@ -54,7 +55,12 @@ print("Neurons")
 ldvae_eval.get_reconstruction_r2(Neurons_H1830002_10Ksubset, ['supercluster_term'], 'Neurons_reconstruction', 'All')
 
 # Save results
-output_file = os.path.join(eval_output_dir, f'Reconstruction_seed_{seed}_ARtype_{ARtype}_latent_dim_{latent_dim}_Atlas_cell_count_{Atlas_cell_count}_alpha_{alpha}_epoch_{epoch_num}_{balancing_method}_bloodbase_eval.pkl')
+output_file = os.path.join(
+    eval_output_dir,
+    f'Reconstruction_seed_{seed}_ARtype_{ARtype}_latent_dim_{latent_dim}_'
+    f'Atlas_cell_count_{Atlas_cell_count}_alpha_{alpha}_bins_{bins}_epoch_{epoch_num}_'
+    f'{balancing_method}_bloodbase_eval.pkl',
+)
 with open(output_file, 'wb') as f:
     pickle.dump(ldvae_eval.evals, f)
 
