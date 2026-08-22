@@ -71,7 +71,10 @@ CUDA_VISIBLE_DEVICES=0 python -u ${root}/main.py \
     --atlas_count ${atlas_count} \
     --batch_size ${batch_size} \
     --alpha ${alpha} \
-    --bins ${bins} >> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-bins${bins}-bs${batch_size}-train.txt 2> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-bins${bins}-bs${batch_size}-train.err
+    --bins ${bins} \
+    --rebuttal True \
+    --rebuttal2 True \
+    --hvg_count 2000 >> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-bins${bins}-bs${batch_size}-train.txt 2> ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-bins${bins}-bs${batch_size}-train.err
 
 # Error checking
 if grep -q "Traceback" ${log_path}/$today/${today}-${data}-AR${AR}-ood${ood}-seed${seed}-epoch${num_epoch}-${model_name}-${atlas_count}atlas-alpha${alpha}-bins${bins}-bs${batch_size}-train.err; then
