@@ -2,6 +2,14 @@ from scripts.dataloader import adjust_training_proportions
 from scripts.scgen_AR.scgen._scgen import SCGEN
 from scripts.utils import set_seed, create_id
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.metrics import (
+    adjusted_rand_score,
+    calinski_harabasz_score,
+    davies_bouldin_score,
+    normalized_mutual_info_score,
+    silhouette_score,
+)
 import matplotlib.colors as mcolors
 from scipy.stats import pearsonr
 import torch.nn.functional as F
@@ -29,6 +37,13 @@ test_metric = pd.DataFrame(
              'value', 'seed'])
 path = os.getcwd()
 root = os.path.abspath(os.path.join(path, os.pardir))+'/'
+
+
+def _repo_root(args):
+    """Resolve repository root from args.root (preferred) or caller cwd."""
+    if getattr(args, 'root', None) and args.root not in ('.', ''):
+        return args.root.rstrip('/') + '/'
+    return root
 
 
 def get_train_test_adata(args, adata):
@@ -105,10 +120,10 @@ def load_eval_adata(args, adata, model_name='Naive'):
     train_adata, test_adata, unper_test_adata, per_test_adata = \
         get_train_test_adata(args, adata)
         
-    model_path = root+"saved_models/"+args.data+"/seed"+str(args.seed)+'/'+args.id+"-best.pt"
+    model_path = _repo_root(args)+"saved_models/"+args.data+"/seed"+str(args.seed)+'/'+args.id+"-best.pt"
     if args.plot_umap_annotated_with_w:
         if args.tracked_epoch != 'best':
-            model_path = root+"saved_models/"+args.data+"/seed"+str(args.seed)+'/'+args.id+"-epoch"+str(args.tracked_epoch)+".pt"
+            model_path = _repo_root(args)+"saved_models/"+args.data+"/seed"+str(args.seed)+'/'+args.id+"-epoch"+str(args.tracked_epoch)+".pt"
         print('loading model from: '+model_path)
     model = SCGEN.load(
         model_path,
@@ -117,6 +132,10 @@ def load_eval_adata(args, adata, model_name='Naive'):
     model.is_trained = True
     
     if args.plot_umap_annotated_with_w | args.degs_extraction_based_on_resampling_w:
+        print('successfully loaded the model in: '+model_path)
+        return model
+
+    if getattr(args, 'latent_clustering_all', False):
         print('successfully loaded the model in: '+model_path)
         return model
 
@@ -653,24 +672,157 @@ def convert_matrix_to_tensor(X):
     return X
 
 
-def visualize_latent_space(model_dic, args, adata, data_type):
+def _harmonize_condition_labels(latent_adata, args):
+    """Map raw condition labels to Control / Stimulated for evaluation."""
+    latent_adata_unper = latent_adata[
+        latent_adata.obs.condition == args.adata_label_unper]
+    latent_adata_unper.obs.condition = 'Control'
+
+    latent_adata_per = latent_adata[
+        latent_adata.obs.condition == args.adata_label_per]
+    latent_adata_per.obs.condition = 'Stimulated'
+
+    latent_adata = latent_adata_unper.concatenate(latent_adata_per)
+    assert latent_adata_unper.shape[0] + latent_adata_per.shape[0] == \
+        latent_adata.shape[0]
+    return latent_adata
+
+
+def _save_latent_clustering_metrics(
+    args,
+    model_name,
+    data_type,
+    n_cells,
+    n_clusters,
+    label_col,
+    sil_score,
+    davies_score,
+    calinski_score,
+    ari_score,
+    nmi_score,
+    kmeans_seed,
+):
+    """Append latent-space clustering metrics to a per-experiment CSV."""
+    out_dir = os.path.join(_repo_root(args), 'result', 'test', args.data, 'clustering')
+    os.makedirs(out_dir, exist_ok=True)
+    file = os.path.join(
+        out_dir,
+        f'{args.test_id}_{model_name}_{data_type}_latent_clustering_'
+        f'{label_col}_seed{args.seed}.csv',
+    )
+
+    dist_df = pd.DataFrame([{
+        'experiment_id': args.test_id,
+        'test': args.test_data[0],
+        'model': model_name,
+        'AR': model_name == 'AR',
+        'variable_con': args.variable_con,
+        'con_percent': args.con_percent,
+        'in_dist_group': args.in_dist_group,
+        'data_type': data_type,
+        'n_cells': n_cells,
+        'n_clusters': n_clusters,
+        'ground_truth_label': label_col,
+        'silhouette_score': round(sil_score, 4),
+        'davies_bouldin_score': round(davies_score, 4),
+        'calinski_harabasz_score': round(calinski_score, 4),
+        'ari': round(ari_score, 4),
+        'nmi': round(nmi_score, 4),
+        'seed': args.seed,
+        'kmeans_seed': kmeans_seed,
+    }])
+
+    print(f'Saving latent clustering metrics to {file}')
+    print(dist_df)
+    if not os.path.isfile(file):
+        dist_df.to_csv(file, index=False)
+    else:
+        dist_df.to_csv(file, mode='a', header=False, index=False)
+
+
+def evaluate_latent_clustering(
+    latent_adata, args, model_name, data_type, label_col='condition'):
+    """Cluster latent embeddings and compare to ground-truth labels."""
+    X = latent_adata.X
+    true_labels = latent_adata.obs[label_col].astype(str).values
+    n_clusters = len(np.unique(true_labels))
+
+    if n_clusters < 2 or X.shape[0] <= n_clusters:
+        print(
+            f'Skipping latent clustering for {model_name} ({data_type}): '
+            f'need >{n_clusters} cells for {n_clusters} clusters.'
+        )
+        return
+
+    kmeans_seed = args.seed
+    set_seed(kmeans_seed)
+    cluster_labels = KMeans(
+        n_clusters=n_clusters,
+        random_state=kmeans_seed,
+        n_init=10,
+    ).fit_predict(X)
+
+    sil_score = silhouette_score(X, cluster_labels)
+    davies_score = davies_bouldin_score(X, cluster_labels)
+    calinski_score = calinski_harabasz_score(X, cluster_labels)
+    ari_score = adjusted_rand_score(true_labels, cluster_labels)
+    nmi_score = normalized_mutual_info_score(
+        true_labels, cluster_labels, average_method='arithmetic')
+
+    print(f'Latent clustering ({model_name}, {data_type}, n={X.shape[0]}, k={n_clusters}):')
+    print(f'  Silhouette score: {sil_score:.3f}')
+    print(f'  Davies-Bouldin score: {davies_score:.3f}')
+    print(f'  Calinski-Harabasz score: {calinski_score:.3f}')
+    print(f'  ARI vs. {label_col}: {ari_score:.3f}')
+    print(f'  NMI vs. {label_col}: {nmi_score:.3f}')
+
+    _save_latent_clustering_metrics(
+        args,
+        model_name,
+        data_type,
+        X.shape[0],
+        n_clusters,
+        label_col,
+        sil_score,
+        davies_score,
+        calinski_score,
+        ari_score,
+        nmi_score,
+        kmeans_seed,
+    )
+
+
+def visualize_latent_space(
+    model_dic,
+    args,
+    adata,
+    data_type,
+    cluster_label_col=None,
+):
     """Visualize the latent space of the models.
     
     Args:
         model_dic (dict): Dictionary containing the model for each method.
         args (argparse.Namespace): Arguments passed to the script.
         adata (anndata.AnnData): Anndata object containing the data.
-        data_type (str): Type of the data, either train or test."""
+        data_type (str): One of ``'train'``, ``'test'``, or ``'all'``.
+            ``'train'`` / ``'test'`` preserve the original subset behaviour;
+            ``'all'`` uses train + test jointly.
+        cluster_label_col (str, optional): Ground-truth column for clustering
+            metrics (ARI/NMI). Defaults to ``'condition'`` for ``train``/``test``
+            and ``args.adata_label_cell`` for ``all``.
+    """
 
-    if not os.path.isdir('figures/umap/'+args.data+'/seed'+str(args.seed)+'/'):
-        os.makedirs('figures/umap/'+args.data+'/seed'+str(args.seed)+'/')
+    if not getattr(args, 'latent_clustering_all', False):
+        if not os.path.isdir('figures/umap/'+args.data+'/seed'+str(args.seed)+'/'):
+            os.makedirs('figures/umap/'+args.data+'/seed'+str(args.seed)+'/')
 
     for model_name, model in model_dic.items():
         if model_name in ['Naive', 'AR']:
             
             train_adata, test_adata, unper_test_adata, per_test_adata = \
                 get_train_test_adata(args, adata)
-            
+
             if data_type == 'train':
                 new_adata = train_adata
             elif data_type == 'test':
@@ -678,12 +830,17 @@ def visualize_latent_space(model_dic, args, adata, data_type):
                 if args.variable_con and args.con_percent == 0.0:
                     new_adata.obs[args.adata_label_cell] = \
                         train_adata.obs[args.adata_label_cell].unique()[0]
+            elif data_type == 'all':
+                new_adata = train_adata.concatenate(test_adata)
+            else:
+                raise ValueError(
+                    f"data_type must be 'train', 'test', or 'all', got {data_type!r}"
+                )
 
             latent_X = model.get_latent_representation(new_adata)
             
-            if data_type=='test':
-
-                if args.variable_con and args.con_percent==0.0:
+            if data_type == 'test':
+                if args.variable_con and args.con_percent == 0.0:
                     new_adata.obs[args.adata_label_cell] = \
                         test_adata.obs[args.adata_label_cell].unique()[0]
 
@@ -691,39 +848,42 @@ def visualize_latent_space(model_dic, args, adata, data_type):
                     new_adata.obs[args.adata_label_cell] = args.in_dist_group
 
             latent_adata = sc.AnnData(X=latent_X, obs=new_adata.obs.copy())
-            # replace the condition with ['Control', 'Stimhlated']
-            latent_adata_unper = latent_adata[latent_adata.obs.condition == \
-                args.adata_label_unper]
-            latent_adata_unper.obs.condition = 'Control'
+            latent_adata = _harmonize_condition_labels(latent_adata, args)
 
-            latent_adata_per = latent_adata[latent_adata.obs.condition == \
-                args.adata_label_per]
-            latent_adata_per.obs.condition = 'Stimulated'
-            
-            latent_adata = latent_adata_unper.concatenate(latent_adata_per)
-                
-            assert latent_adata_unper.shape[0] + latent_adata_per.shape[0] == \
-                latent_adata.shape[0]
-            
-            palette = {'Stimulated':'darkorange',
-                       'Control':'dodgerblue'}
+            label_col = cluster_label_col
+            if label_col is None:
+                label_col = (
+                    args.adata_label_cell if data_type == 'all' else 'condition'
+                )
 
-            set_seed(args.seed)
-            sc.pp.neighbors(latent_adata)
-            sc.set_figure_params(dpi=600, format='png')
-            sc.tl.umap(latent_adata)
-            sc.pl.umap(latent_adata, 
-                       color=['condition'], 
-                       wspace=0.4, 
-                       frameon=False,
-                       save='/'+args.data+'/seed'+str(args.seed)+'/'+ \
-                            args.data+'-test'+args.test_data[0]+'-'+model_name+ \
-                            '-variablecon'+str(args.variable_con)+'-conpercent'+ \
-                            str(args.con_percent)+'-seed'+str(args.seed)+'-'+ \
-                            data_type+'-condition-umap.png',
-                       show=False,
-                       title=[''],
-                       palette=palette)
+            evaluate_latent_clustering(
+                latent_adata,
+                args,
+                model_name,
+                data_type,
+                label_col=label_col,
+            )
+
+            if not getattr(args, 'latent_clustering_all', False):
+                palette = {'Stimulated':'darkorange',
+                           'Control':'dodgerblue'}
+
+                set_seed(args.seed)
+                sc.pp.neighbors(latent_adata)
+                sc.set_figure_params(dpi=600, format='png')
+                sc.tl.umap(latent_adata)
+                sc.pl.umap(latent_adata, 
+                           color=['condition'], 
+                           wspace=0.4, 
+                           frameon=False,
+                           save='/'+args.data+'/seed'+str(args.seed)+'/'+ \
+                                args.data+'-test'+args.test_data[0]+'-'+model_name+ \
+                                '-variablecon'+str(args.variable_con)+'-conpercent'+ \
+                                str(args.con_percent)+'-seed'+str(args.seed)+'-'+ \
+                                data_type+'-condition-umap.png',
+                           show=False,
+                           title=[''],
+                           palette=palette)
     return
 
 
@@ -899,89 +1059,99 @@ def test_scgen(args, adata=None, model_dic={}):
         get_train_test_adata(args, adata)
     create_test_id(args)
     
-    unper_test_adata.X = convert_matrix_to_tensor(unper_test_adata.X)
-    per_test_adata.X = convert_matrix_to_tensor(per_test_adata.X)
-    all_test_adata = per_test_adata.concatenate(unper_test_adata)
-    all_adata = train_adata.concatenate(test_adata)
-    
-    assert set(unper_test_adata.obs[args.adata_label_cell]) == \
-        set(per_test_adata.obs[args.adata_label_cell])
-
-    # plot umap plots annotated by AR weights
-    if args.plot_umap_annotated_with_w:
-        if 'AR' in args.model:
-            args.AR = True
-            create_id(args)
-            model = load_eval_adata(args, adata, 'AR')
-            plot_umap_with_weight_annotation(all_adata, args, model)
-            plot_umap_with_weight_annotation(all_adata, args, model, 'latent')
-            return
+    if not getattr(args, 'latent_clustering_all', False):
+        unper_test_adata.X = convert_matrix_to_tensor(unper_test_adata.X)
+        per_test_adata.X = convert_matrix_to_tensor(per_test_adata.X)
+        all_test_adata = per_test_adata.concatenate(unper_test_adata)
+        all_adata = train_adata.concatenate(test_adata)
         
-    # extract DEGs based on resampling weights
-    if (args.degs_extraction_based_on_resampling_w) & (args.tracked_epoch=='best'):
-        if 'AR' in args.model:
-            args.AR = True
-            create_id(args)
-            model = load_eval_adata(args, adata, 'AR')
-            extract_DEGs_based_on_resampling_weights(all_adata, args, model)
-            return
+        assert set(unper_test_adata.obs[args.adata_label_cell]) == \
+            set(per_test_adata.obs[args.adata_label_cell])
+
+        # plot umap plots annotated by AR weights
+        if args.plot_umap_annotated_with_w:
+            if 'AR' in args.model:
+                args.AR = True
+                create_id(args)
+                model = load_eval_adata(args, adata, 'AR')
+                plot_umap_with_weight_annotation(all_adata, args, model)
+                plot_umap_with_weight_annotation(all_adata, args, model, 'latent')
+                return
+            
+        # extract DEGs based on resampling weights
+        if (args.degs_extraction_based_on_resampling_w) & (args.tracked_epoch=='best'):
+            if 'AR' in args.model:
+                args.AR = True
+                create_id(args)
+                model = load_eval_adata(args, adata, 'AR')
+                extract_DEGs_based_on_resampling_weights(all_adata, args, model)
+                return
 
     # create two dictionaries to store the model and eval_adata for each method
     models = args.model.split(',')
     for model_name in models:
         args.AR = False if model_name == 'Naive' else True
         create_id(args)
-        eval_adata, model, pred_adata = \
-            load_eval_adata(args, adata, model_name)
-        pred_adata.X = convert_matrix_to_tensor(pred_adata.X)
-        all_test_adata = pred_adata.concatenate(all_test_adata)
+        if getattr(args, 'latent_clustering_all', False):
+            model = load_eval_adata(args, adata, model_name)
+            model_dic[model_name] = model
+        else:
+            eval_adata, model, pred_adata = \
+                load_eval_adata(args, adata, model_name)
+            pred_adata.X = convert_matrix_to_tensor(pred_adata.X)
+            all_test_adata = pred_adata.concatenate(all_test_adata)
 
-        assert pred_adata.obs[args.adata_label_cell].tolist() == \
-            unper_test_adata.obs[args.adata_label_cell].tolist()
-        assert pred_adata.obs.condition.tolist() == \
-            [model_name]*pred_adata.shape[0]
-        
-        eval_adata.X = convert_matrix_to_tensor(eval_adata.X)
-        model_dic[model_name] = model
-        eval_adata_dic[model_name] = eval_adata
+            assert pred_adata.obs[args.adata_label_cell].tolist() == \
+                unper_test_adata.obs[args.adata_label_cell].tolist()
+            assert pred_adata.obs.condition.tolist() == \
+                [model_name]*pred_adata.shape[0]
+            
+            eval_adata.X = convert_matrix_to_tensor(eval_adata.X)
+            model_dic[model_name] = model
+            eval_adata_dic[model_name] = eval_adata
         
     # print keys of the eval_adata_dic and model_dic
     # print('eval_adata_dic keys: ')
     # print(eval_adata_dic.keys())
     # print('model_dic keys: ')
     # print(model_dic.keys())
-        
-    # extract DEG index
-    DEG_idx_dic = {}
-    DEG_idx = []
-    for count in [20, 50, 100]:
-        DEG_idx = extract_DEG(
-            per_test_adata.concatenate(unper_test_adata),
-            args, count=count)
-        DEG_idx_dic[count] = DEG_idx
 
-    # calculate correlation of model predictions with ground truth
-    evaluate_correlation(eval_adata_dic, args, DEG_idx_dic)
-    
-    # calculate cosine similarity
-    compare_cosine_similarity(all_test_adata, args, DEG_idx_dic[20])
-    
-    # visualize latent space
-    # visualize_latent_space(model_dic, args, adata, 'train')
-    # visualize_latent_space(model_dic, args, adata, 'test')
-
-    # R2 between differences of sitmulated and control
-    # calculate_diff_corr(all_test_adata, args, DEG_idx_dic[20])
-
-    # save results
-    global test_metric
-    file = root+'result/test/'+args.data+'/'+ \
-        "{:%Y%m%d}".format(datetime.now())+'-'+args.test_id+'.csv'
-    # check if there is a file with the same name
-    if not os.path.isfile(file):
-        test_metric.to_csv(file, index=False, header=True)
+    if getattr(args, 'latent_clustering_all', False):
+        # latent-space clustering on all train+test cells (cell-type ARI/NMI only)
+        visualize_latent_space(model_dic, args, adata, data_type='all')
     else:
-        test_metric.to_csv(file, mode='a', index=False, header=False)
+        # extract DEG index
+        DEG_idx_dic = {}
+        DEG_idx = []
+        for count in [20, 50, 100]:
+            DEG_idx = extract_DEG(
+                per_test_adata.concatenate(unper_test_adata),
+                args, count=count)
+            DEG_idx_dic[count] = DEG_idx
+
+        # calculate correlation of model predictions with ground truth
+        evaluate_correlation(eval_adata_dic, args, DEG_idx_dic)
+        
+        # calculate cosine similarity
+        compare_cosine_similarity(all_test_adata, args, DEG_idx_dic[20])
+        
+        # visualize latent space and clustering metrics
+        # visualize_latent_space(model_dic, args, adata, 'train')
+        # visualize_latent_space(model_dic, args, adata, 'test')
+        # visualize_latent_space(model_dic, args, adata, 'all')  # train+test, ARI/NMI vs cell type
+
+        # R2 between differences of sitmulated and control
+        # calculate_diff_corr(all_test_adata, args, DEG_idx_dic[20])
+
+        # save results
+        global test_metric
+        file = root+'result/test/'+args.data+'/'+ \
+            "{:%Y%m%d}".format(datetime.now())+'-'+args.test_id+'.csv'
+        # check if there is a file with the same name
+        if not os.path.isfile(file):
+            test_metric.to_csv(file, index=False, header=True)
+        else:
+            test_metric.to_csv(file, mode='a', index=False, header=False)
 
     return
 
