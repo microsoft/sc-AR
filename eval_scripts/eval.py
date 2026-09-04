@@ -128,7 +128,8 @@ def load_eval_adata(args, adata, model_name='Naive'):
     model = SCGEN.load(
         model_path,
         train_adata.copy(),
-        use_gpu = args.gpu)
+        accelerator="gpu" if args.gpu else "cpu",
+        device='auto')
     model.is_trained = True
     
     if args.plot_umap_annotated_with_w | args.degs_extraction_based_on_resampling_w:

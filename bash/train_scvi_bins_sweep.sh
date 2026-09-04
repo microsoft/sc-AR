@@ -21,7 +21,7 @@ ALPHA=0.0001   # manuscript default; held fixed for bin sensitivity
 ############################
 SEEDS=(42 43 44 45 46)
 ATLAS_COUNTS=(0 1 10 100 1000 10000 50000)
-BINS=(50 80 120 150)   # add 100 to compare against manuscript default
+BINS=(100) #(50 80 120 150)   # add 100 to compare against manuscript default
 
 ############################
 # Script to call
