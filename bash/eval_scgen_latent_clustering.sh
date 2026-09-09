@@ -35,8 +35,8 @@ today=$(date '+%Y%m%d')
 mkdir -p "log/${today}"
 
 # activate environment
-eval "$(conda shell.bash hook)"
-source activate scar-env
+# eval "$(conda shell.bash hook)"
+# source activate scar-env
 
 # Avoid mixed OpenMP (libiomp + libomp) crashes during sklearn on macOS.
 export KMP_DUPLICATE_LIB_OK="${KMP_DUPLICATE_LIB_OK:-TRUE}"

@@ -5,10 +5,10 @@ set -e
 # Fixed parameters
 ############################
 DATA="sctab"
-DATA_PATH="/path/to/dataset/"
-OUT_PATH="/path/to/saved_models/"
+DATA_PATH="../data/"
+OUT_PATH="..//saved_models/"
 LOG_PATH="./log"
-ROOT="/path/to/project/root"
+ROOT="../"
 
 MODEL_NAME="scvi"
 LATENT_DIM=64

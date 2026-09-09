@@ -17,8 +17,8 @@ bins=${13}         # number of histogram bins for AR resampling weights
 
 
 # activate the conda environment
-eval "$(conda shell.bash hook)"
-source activate scAR-env
+# eval "$(conda shell.bash hook)"
+# source activate scAR-env
 export WANDB_KEY=''
 
 # create log folder

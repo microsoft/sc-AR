@@ -5,14 +5,15 @@
 seed_values=(42 43 44 45 46)
 ARtype_values=("T") # "F")
 latent_dim_values=(64)
-Atlas_cell_count=(0 1 10 100 1000 10000 50000)
+# Atlas_cell_count=(0 1 10 100 1000 10000 50000)
+Atlas_cell_count=(0)
 ALPHA=0.0001
 EPOCH=300
 BINS_VALUES=(50 80 120 150)
 
 # activate the conda environment
-eval "$(conda shell.bash hook)"
-source activate scAR-env
+# eval "$(conda shell.bash hook)"
+# source activate scAR-env
 
 for seed in "${seed_values[@]}"; do
     for ARtype in "${ARtype_values[@]}"; do
