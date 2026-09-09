@@ -235,8 +235,10 @@ if __name__ == '__main__':
     parser.add_argument("--latent_clustering_all",
                         type=str2bool, nargs='?',
                         const=True, default=False,
-                        help="Run latent-space clustering on train+test cells "
-                             "(ARI/NMI vs cell-type label) for scGen models")
+                        help="Run scGen latent clustering for AR and Naive: "
+                             "test cells vs condition and train cells vs cell-group "
+                             "labels; writes metrics CSVs and separate GT/KMeans "
+                             "PCA-2 plots of the latent")
     parser.add_argument("--store_resampling_weights",
                         type=str2bool, nargs='?', 
                         const=True, default=False,

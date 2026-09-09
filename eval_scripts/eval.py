@@ -12,6 +12,7 @@ from sklearn.metrics import (
 )
 import matplotlib.colors as mcolors
 from scipy.stats import pearsonr
+from scipy.optimize import linear_sum_assignment
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -102,6 +103,18 @@ def get_train_test_adata(args, adata):
 
     test_adata = per_test_adata.concatenate(unper_test_adata)
     return train_adata, test_adata, unper_test_adata, per_test_adata
+
+
+def _get_train_valid_adata(args, adata):
+    """All cells except held-out × stimulated (train + validation combined)."""
+    if args.variable_con:
+        adjusted_adata = adjust_training_proportions(args, adata)
+        return adjusted_adata[~(
+            (adjusted_adata.obs[args.adata_label_cell].isin(args.test_data)) &
+            (adjusted_adata.obs.condition == args.adata_label_per))].copy()
+    return adata[~(
+        (adata.obs[args.adata_label_cell].isin(args.test_data)) &
+        (adata.obs.condition == args.adata_label_per))].copy()
 
 
 def load_eval_adata(args, adata, model_name='Naive'):
@@ -741,9 +754,43 @@ def _save_latent_clustering_metrics(
         dist_df.to_csv(file, mode='a', header=False, index=False)
 
 
+def _match_clusters_to_true_labels(true_labels, cluster_labels):
+    """Map each KMeans id to a unique GT label (Hungarian on contingency)."""
+    true_labels = np.asarray(true_labels).astype(str)
+    cluster_labels = np.asarray(cluster_labels).astype(str)
+    true_cats = np.unique(true_labels)
+    clust_cats = np.unique(cluster_labels)
+
+    cont = np.zeros((len(clust_cats), len(true_cats)), dtype=np.int64)
+    clust_index = {c: i for i, c in enumerate(clust_cats)}
+    true_index = {t: i for i, t in enumerate(true_cats)}
+    for t, c in zip(true_labels, cluster_labels):
+        cont[clust_index[c], true_index[t]] += 1
+
+    # Pad to square if needed so every cluster gets a distinct label when possible.
+    n = max(cont.shape[0], cont.shape[1])
+    cost = np.zeros((n, n), dtype=np.float64)
+    cost[: cont.shape[0], : cont.shape[1]] = cont
+    row_ind, col_ind = linear_sum_assignment(-cost)
+
+    mapping = {}
+    for r, c in zip(row_ind, col_ind):
+        if r < len(clust_cats) and c < len(true_cats):
+            mapping[clust_cats[r]] = true_cats[c]
+    for c in clust_cats:
+        if c not in mapping:
+            mapping[c] = true_cats[int(np.argmax(cont[clust_index[c]]))]
+    return np.asarray([mapping[c] for c in cluster_labels], dtype=object)
+
+
 def evaluate_latent_clustering(
     latent_adata, args, model_name, data_type, label_col='condition'):
-    """Cluster latent embeddings and compare to ground-truth labels."""
+    """Cluster latent embeddings and compare to ground-truth labels.
+
+    Writes ``kmeans_cluster`` and ``kmeans_matched_label`` (GT names via
+    Hungarian matching) into ``latent_adata.obs`` for downstream plots.
+    Returns a dict of scores, or ``None`` if clustering is skipped.
+    """
     X = latent_adata.X
     true_labels = latent_adata.obs[label_col].astype(str).values
     n_clusters = len(np.unique(true_labels))
@@ -753,7 +800,7 @@ def evaluate_latent_clustering(
             f'Skipping latent clustering for {model_name} ({data_type}): '
             f'need >{n_clusters} cells for {n_clusters} clusters.'
         )
-        return
+        return None
 
     kmeans_seed = args.seed
     set_seed(kmeans_seed)
@@ -763,6 +810,14 @@ def evaluate_latent_clustering(
         n_init=10,
     ).fit_predict(X)
 
+    matched_labels = _match_clusters_to_true_labels(true_labels, cluster_labels)
+    latent_adata.obs['kmeans_cluster'] = pd.Categorical(
+        np.asarray(cluster_labels).astype(str)
+    )
+    latent_adata.obs['kmeans_matched_label'] = pd.Categorical(
+        matched_labels.astype(str)
+    )
+
     sil_score = silhouette_score(X, cluster_labels)
     davies_score = davies_bouldin_score(X, cluster_labels)
     calinski_score = calinski_harabasz_score(X, cluster_labels)
@@ -770,7 +825,10 @@ def evaluate_latent_clustering(
     nmi_score = normalized_mutual_info_score(
         true_labels, cluster_labels, average_method='arithmetic')
 
-    print(f'Latent clustering ({model_name}, {data_type}, n={X.shape[0]}, k={n_clusters}):')
+    print(
+        f'Latent clustering ({model_name}, {data_type}, '
+        f'label={label_col}, n={X.shape[0]}, k={n_clusters}):'
+    )
     print(f'  Silhouette score: {sil_score:.3f}')
     print(f'  Davies-Bouldin score: {davies_score:.3f}')
     print(f'  Calinski-Harabasz score: {calinski_score:.3f}')
@@ -791,6 +849,300 @@ def evaluate_latent_clustering(
         nmi_score,
         kmeans_seed,
     )
+    return {
+        'ari': ari_score,
+        'nmi': nmi_score,
+        'silhouette': sil_score,
+        'n_clusters': n_clusters,
+    }
+
+
+def _encode_latent_adata(model, cells_adata, args):
+    """Project cells into model latent space (one forward pass)."""
+    latent_X = model.get_latent_representation(cells_adata)
+    latent_adata = sc.AnnData(X=latent_X, obs=cells_adata.obs.copy())
+    return _harmonize_condition_labels(latent_adata, args)
+
+
+def _assert_latent_task_labels(latent_adata, args, data_type, label_col):
+    """Sanity-check cell sets and GT columns before clustering."""
+    cond = latent_adata.obs['condition'].astype(str)
+    cell = latent_adata.obs[args.adata_label_cell].astype(str)
+    n = latent_adata.n_obs
+    assert n > 0, f'{data_type}: empty latent AnnData'
+    assert label_col in latent_adata.obs.columns, (
+        f'{data_type}: missing label column {label_col!r}'
+    )
+    # Harmonize maps raw control/stim labels → Control / Stimulated.
+    assert set(cond.unique()) <= {'Control', 'Stimulated'}, (
+        f'{data_type}: unexpected condition labels {sorted(cond.unique())}'
+    )
+
+    if data_type == 'test':
+        assert label_col == 'condition', (
+            f'test task must use condition labels, got {label_col!r}'
+        )
+        assert set(cell.unique()) <= set(map(str, args.test_data)), (
+            f'test cells must be held-out group(s) {args.test_data}, '
+            f'got {sorted(cell.unique())}'
+        )
+        assert cond.nunique() == 2, (
+            f'test condition clustering needs both Control and Stimulated, '
+            f'got {sorted(cond.unique())}'
+        )
+    elif data_type == 'train':
+        assert label_col == args.adata_label_cell, (
+            f'train task must use cell-group column '
+            f'{args.adata_label_cell!r}, got {label_col!r}'
+        )
+        # Same exclusion as training: no held-out × stimulated cells.
+        held_out_stim = cell.isin(list(map(str, args.test_data))) & (
+            cond == 'Stimulated'
+        )
+        assert not held_out_stim.any(), (
+            'train set must not contain held-out stimulated cells '
+            f'(found {int(held_out_stim.sum())})'
+        )
+        n_groups = latent_adata.obs[label_col].astype(str).nunique()
+        assert n_groups >= 2, (
+            f'train cell-group clustering needs ≥2 groups, got {n_groups}'
+        )
+    else:
+        raise ValueError(f'Unknown data_type {data_type!r}')
+
+    print(
+        f'  label checks OK | n={n} | {label_col} levels='
+        f'{sorted(latent_adata.obs[label_col].astype(str).unique())}',
+        flush=True,
+    )
+
+
+def _ensure_latent_umap(latent_adata, seed):
+    """Compute a 2D embedding of latent ``.X`` once; reuse if already present.
+
+    Uses PCA → ``obsm['X_umap']`` so ``sc.pl.umap`` can plot it. On macOS,
+    umap-learn / scanpy-neighbors often segfault under mixed OpenMP
+    (libiomp + libomp) after torch/sklearn are both loaded; PCA avoids that.
+    Latent dim is already low (e.g. 64), so PCA-2 is a reasonable viz.
+    """
+    if 'X_umap' in latent_adata.obsm:
+        return
+    set_seed(seed)
+    X = np.asarray(latent_adata.X, dtype=np.float64)
+    if X.ndim != 2:
+        raise ValueError(f'Expected 2D latent matrix, got shape {X.shape}')
+    if not np.isfinite(X).all():
+        raise ValueError('Non-finite values in latent representation')
+    n_comp = min(2, X.shape[0], X.shape[1])
+    emb = PCA(n_components=n_comp, random_state=seed).fit_transform(X)
+    if n_comp == 1:
+        emb = np.hstack([emb, np.zeros((emb.shape[0], 1), dtype=emb.dtype)])
+    latent_adata.obsm['X_umap'] = emb
+    print(
+        f'Computed PCA-2 embedding of latent for plotting '
+        f'(n={X.shape[0]}, d={X.shape[1]})',
+        flush=True,
+    )
+
+
+def _plot_latent_umap_true_vs_kmeans(
+    latent_adata,
+    args,
+    model_name,
+    data_type,
+    label_col,
+    scores=None,
+    true_palette=None,
+):
+    """Save separate GT- and KMeans-colored PCA-2 plots of the latent (no titles).
+
+    KMeans clusters are shown under matched GT label names with the same
+    category order and colors as the ground-truth panel.
+    """
+    import matplotlib
+    matplotlib.use('Agg', force=False)
+
+    if 'kmeans_matched_label' not in latent_adata.obs.columns:
+        print(
+            f'Skipping latent embedding plots for {model_name} ({data_type}): '
+            'no kmeans_matched_label in obs.'
+        )
+        return
+
+    fig_dir = os.path.join('figures', 'umap', args.data, f'seed{args.seed}')
+    os.makedirs(fig_dir, exist_ok=True)
+
+    true_plot_col = 'true_label'
+    km_plot_col = 'kmeans_matched_label'
+    true_vals = latent_adata.obs[label_col].astype(str).values
+    km_vals = latent_adata.obs[km_plot_col].astype(str).values
+
+    if label_col == 'condition':
+        cat_order = [
+            c for c in ('Control', 'Stimulated')
+            if c in set(true_vals) or c in set(km_vals)
+        ]
+        for c in sorted(set(true_vals) | set(km_vals)):
+            if c not in cat_order:
+                cat_order.append(c)
+    else:
+        cat_order = sorted(set(true_vals) | set(km_vals))
+
+    latent_adata.obs[true_plot_col] = pd.Categorical(
+        true_vals, categories=cat_order
+    )
+    latent_adata.obs[km_plot_col] = pd.Categorical(
+        km_vals, categories=cat_order
+    )
+
+    if true_palette is not None and all(c in true_palette for c in cat_order):
+        colors = [true_palette[c] for c in cat_order]
+    else:
+        # Stable default palette shared by GT and matched-KMeans panels.
+        default = [
+            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+            '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+            '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5',
+            '#c49c94', '#f7b6d2', '#c7c7c7', '#dbdb8d', '#9edae5',
+        ]
+        colors = [default[i % len(default)] for i in range(len(cat_order))]
+
+    latent_adata.uns[f'{true_plot_col}_colors'] = colors
+    latent_adata.uns[f'{km_plot_col}_colors'] = list(colors)
+
+    _ensure_latent_umap(latent_adata, args.seed)
+    sc.set_figure_params(dpi=200, format='png')
+
+    held_out = args.test_data[0]
+    base = (
+        f'{args.data}-heldout{held_out}-model{model_name}'
+        f'-cells_{data_type}-label_{label_col}'
+        f'-varcon{args.variable_con}-conpct{args.con_percent}'
+        f'-seed{args.seed}-pca2'
+    )
+
+    plot_specs = [
+        (true_plot_col, f'{base}-color_ground_truth.png'),
+    ]
+    ari = None if scores is None else scores.get('ari')
+    nmi = None if scores is None else scores.get('nmi')
+    km_suffix = '-color_kmeans'
+    if ari is not None and nmi is not None:
+        km_suffix += f'-ari{ari:.3f}-nmi{nmi:.3f}'
+    plot_specs.append((km_plot_col, f'{base}{km_suffix}.png'))
+
+    for color_key, filename in plot_specs:
+        save_name = f'/{args.data}/seed{args.seed}/{filename}'
+        sc.pl.umap(
+            latent_adata,
+            color=color_key,
+            frameon=False,
+            save=save_name,
+            show=False,
+            title='',
+            legend_loc='right margin',
+        )
+        plt.close('all')
+        print(
+            f'Saved latent PCA-2 plot: figures/umap{save_name}',
+            flush=True,
+        )
+
+
+def _cluster_latent_and_plot_umap(
+    latent_adata,
+    args,
+    model_name,
+    data_type,
+    label_col,
+    true_palette=None,
+):
+    """Run KMeans vs ``label_col``, save metrics, plot separate GT / KMeans figs."""
+    scores = evaluate_latent_clustering(
+        latent_adata,
+        args,
+        model_name,
+        data_type,
+        label_col=label_col,
+    )
+    if scores is None:
+        return None
+    _plot_latent_umap_true_vs_kmeans(
+        latent_adata,
+        args,
+        model_name,
+        data_type,
+        label_col=label_col,
+        scores=scores,
+        true_palette=true_palette,
+    )
+    return scores
+
+
+def _prepare_test_adata_for_latent(args, train_adata, test_adata):
+    """Test cells with the same label overrides as the historical test path."""
+    new_adata = test_adata.copy()
+    if args.variable_con and args.con_percent == 0.0:
+        # Match prior behaviour: briefly set then restore true test labels.
+        new_adata.obs[args.adata_label_cell] = (
+            test_adata.obs[args.adata_label_cell].values
+        )
+    if args.in_dist_group != '':
+        new_adata.obs[args.adata_label_cell] = args.in_dist_group
+    return new_adata
+
+
+def run_latent_clustering_pipeline(model_dic, args, adata):
+    """Full latent-clustering suite for ``--latent_clustering_all``.
+
+    Cell splits:
+
+    - **train**: every cell except held-out × stimulated (train+validation;
+      held-out **control** cells are included). GT label =
+      ``args.adata_label_cell`` (e.g. ``cell_type``).
+    - **test**: held-out cell group, both control and stimulated. GT label
+      = ``condition`` (Control vs Stimulated after harmonization).
+
+    For each of AR and Naive: encode once → KMeans (k = #GT levels) in
+    latent space → ARI/NMI vs GT + cluster-quality metrics → separate
+    PCA-2 plots colored by GT and by Hungarian-matched KMeans labels.
+    """
+    fig_dir = os.path.join('figures', 'umap', args.data, f'seed{args.seed}')
+    os.makedirs(fig_dir, exist_ok=True)
+
+    _, test_adata, _, _ = get_train_test_adata(args, adata)
+    train_cells = _get_train_valid_adata(args, adata)
+    test_cells = _prepare_test_adata_for_latent(args, train_cells, test_adata)
+    condition_palette = {'Stimulated': 'darkorange', 'Control': 'dodgerblue'}
+
+    tasks = [
+        ('test', test_cells, 'condition', condition_palette),
+        ('train', train_cells, args.adata_label_cell, None),
+    ]
+
+    for model_name, model in model_dic.items():
+        if model_name not in ('Naive', 'AR'):
+            continue
+        print('=' * 72)
+        print(f'Latent clustering suite | model={model_name}')
+        print('=' * 72)
+        for data_type, cells_adata, label_col, palette in tasks:
+            print(
+                f'--> {data_type}: n={cells_adata.n_obs}, label_col={label_col}',
+                flush=True,
+            )
+            latent_adata = _encode_latent_adata(model, cells_adata, args)
+            _assert_latent_task_labels(
+                latent_adata, args, data_type, label_col
+            )
+            _cluster_latent_and_plot_umap(
+                latent_adata,
+                args,
+                model_name,
+                data_type,
+                label_col=label_col,
+                true_palette=palette,
+            )
 
 
 def visualize_latent_space(
@@ -800,92 +1152,55 @@ def visualize_latent_space(
     data_type,
     cluster_label_col=None,
 ):
-    """Visualize the latent space of the models.
-    
-    Args:
-        model_dic (dict): Dictionary containing the model for each method.
-        args (argparse.Namespace): Arguments passed to the script.
-        adata (anndata.AnnData): Anndata object containing the data.
-        data_type (str): One of ``'train'``, ``'test'``, or ``'all'``.
-            ``'train'`` / ``'test'`` preserve the original subset behaviour;
-            ``'all'`` uses train + test jointly.
-        cluster_label_col (str, optional): Ground-truth column for clustering
-            metrics (ARI/NMI). Defaults to ``'condition'`` for ``train``/``test``
-            and ``args.adata_label_cell`` for ``all``.
-    """
+    """Cluster + UMAP for a single cell subset (train / test / all).
 
-    if not getattr(args, 'latent_clustering_all', False):
-        if not os.path.isdir('figures/umap/'+args.data+'/seed'+str(args.seed)+'/'):
-            os.makedirs('figures/umap/'+args.data+'/seed'+str(args.seed)+'/')
+    Prefer :func:`run_latent_clustering_pipeline` when ``--latent_clustering_all``
+    is set (runs both test-condition and train-cell-group tasks).
+    """
+    fig_dir = os.path.join('figures', 'umap', args.data, f'seed{args.seed}')
+    os.makedirs(fig_dir, exist_ok=True)
+
+    train_adata, test_adata, _, _ = get_train_test_adata(args, adata)
+    if data_type == 'train':
+        # Full seen set (train+valid): exclude only held-out stimulated cells.
+        cells_adata = _get_train_valid_adata(args, adata)
+        default_label = args.adata_label_cell
+        true_palette = None
+    elif data_type == 'test':
+        cells_adata = _prepare_test_adata_for_latent(
+            args, train_adata, test_adata
+        )
+        default_label = 'condition'
+        true_palette = {'Stimulated': 'darkorange', 'Control': 'dodgerblue'}
+    elif data_type == 'all':
+        cells_adata = _get_train_valid_adata(args, adata).concatenate(
+            test_adata
+        )
+        default_label = args.adata_label_cell
+        true_palette = None
+    else:
+        raise ValueError(
+            f"data_type must be 'train', 'test', or 'all', got {data_type!r}"
+        )
+
+    label_col = (
+        cluster_label_col if cluster_label_col is not None else default_label
+    )
 
     for model_name, model in model_dic.items():
-        if model_name in ['Naive', 'AR']:
-            
-            train_adata, test_adata, unper_test_adata, per_test_adata = \
-                get_train_test_adata(args, adata)
-
-            if data_type == 'train':
-                new_adata = train_adata
-            elif data_type == 'test':
-                new_adata = test_adata.copy()
-                if args.variable_con and args.con_percent == 0.0:
-                    new_adata.obs[args.adata_label_cell] = \
-                        train_adata.obs[args.adata_label_cell].unique()[0]
-            elif data_type == 'all':
-                new_adata = train_adata.concatenate(test_adata)
-            else:
-                raise ValueError(
-                    f"data_type must be 'train', 'test', or 'all', got {data_type!r}"
-                )
-
-            latent_X = model.get_latent_representation(new_adata)
-            
-            if data_type == 'test':
-                if args.variable_con and args.con_percent == 0.0:
-                    new_adata.obs[args.adata_label_cell] = \
-                        test_adata.obs[args.adata_label_cell].unique()[0]
-
-                if args.in_dist_group != '':
-                    new_adata.obs[args.adata_label_cell] = args.in_dist_group
-
-            latent_adata = sc.AnnData(X=latent_X, obs=new_adata.obs.copy())
-            latent_adata = _harmonize_condition_labels(latent_adata, args)
-
-            label_col = cluster_label_col
-            if label_col is None:
-                label_col = (
-                    args.adata_label_cell if data_type == 'all' else 'condition'
-                )
-
-            evaluate_latent_clustering(
-                latent_adata,
-                args,
-                model_name,
-                data_type,
-                label_col=label_col,
-            )
-
-            if not getattr(args, 'latent_clustering_all', False):
-                palette = {'Stimulated':'darkorange',
-                           'Control':'dodgerblue'}
-
-                set_seed(args.seed)
-                sc.pp.neighbors(latent_adata)
-                sc.set_figure_params(dpi=600, format='png')
-                sc.tl.umap(latent_adata)
-                sc.pl.umap(latent_adata, 
-                           color=['condition'], 
-                           wspace=0.4, 
-                           frameon=False,
-                           save='/'+args.data+'/seed'+str(args.seed)+'/'+ \
-                                args.data+'-test'+args.test_data[0]+'-'+model_name+ \
-                                '-variablecon'+str(args.variable_con)+'-conpercent'+ \
-                                str(args.con_percent)+'-seed'+str(args.seed)+'-'+ \
-                                data_type+'-condition-umap.png',
-                           show=False,
-                           title=[''],
-                           palette=palette)
+        if model_name not in ('Naive', 'AR'):
+            continue
+        latent_adata = _encode_latent_adata(model, cells_adata, args)
+        _cluster_latent_and_plot_umap(
+            latent_adata,
+            args,
+            model_name,
+            data_type,
+            label_col=label_col,
+            true_palette=true_palette,
+        )
     return
+
 
 
 def calculate_diff_corr(adata, args, DEG_idx):
@@ -1118,8 +1433,8 @@ def test_scgen(args, adata=None, model_dic={}):
     # print(model_dic.keys())
 
     if getattr(args, 'latent_clustering_all', False):
-        # latent-space clustering on all train+test cells (cell-type ARI/NMI only)
-        visualize_latent_space(model_dic, args, adata, data_type='all')
+        # Test (condition) + train (cell-group) clustering + GT|KMeans UMAPs
+        run_latent_clustering_pipeline(model_dic, args, adata)
     else:
         # extract DEG index
         DEG_idx_dic = {}
