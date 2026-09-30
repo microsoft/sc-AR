@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def calculate_resampling_weights(z, bins=100, smoothing_fac=0.001): 
+def calculate_resampling_weights(z, bins=100, smoothing_fac=0.0001): 
     """Updates the sampling probabilities for cells within a batch based on the maximum of
     latent variables' probablities.
     source: https://goodboychan.github.io/python/tensorflow/mit/2021/02/27/Debiasing.html
